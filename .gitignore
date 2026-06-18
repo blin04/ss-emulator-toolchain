@@ -1,0 +1,4 @@
+build/
+misc/*
+!misc/*.l
+!misc/*.y
