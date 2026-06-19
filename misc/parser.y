@@ -3,6 +3,8 @@
 
   int yylex();
   void yyerror(const char *);
+
+  int line_num = 0;
 %}
 
 %union {
@@ -14,8 +16,8 @@
 %token HALT INT IRET CALL RET JMP BEQ BNE 
 %token BGT PUSH POP XCHNG ADD SUB MUL DIV 
 %token NOT AND OR XOR SHL SHR LD ST CSSRD CSRWR
-%token BIN_INT COMMA COMMENT COLON DEC_INT DOLLAR DOT HEX_INT 
-%token LITERAL LPAR NL OCT_INT PLUS PERCENT RPAR SYMBOL
+%token COMMA COMMENT COLON DOLLAR DOT LITERAL
+%token LPAR NL PLUS PERCENT RPAR SYMBOL
 %token ASCII END EQU EXTERN GLOBAL SECTION SKIP WORD
 %token CAUSE HANDLER PC REG SP STATUS 
 
@@ -25,20 +27,20 @@
 
 // a program is made up of zero or more lines
 program: 
-    /* empty */
-  | program line
+    line
+  | program NL line {printf("parsed program\n");}
   ;
 
 // a line is an instruction statement, a directive, 
 // a comment or just an empty line
 line:
-    DOT directive NL
-  | statement NL
-  | label NL
-  | label DOT directive NL
-  | label statement NL
-  | COMMENT
-  | NL
+    /* empty */ { line_num++; }
+  | directive { line_num++; printf("parsed directive\n"); }
+  | statement { line_num++; }
+  | label { line_num++; }
+  | label DOT directive { line_num++; }
+  | label statement { line_num++; }
+  | COMMENT { line_num++; }
   ;
   
 label:
@@ -46,14 +48,19 @@ label:
   ;
   
 directive:
-    DOT ASCII
-  | DOT END 
-  | DOT EQU 
-  | DOT EXTERN 
-  | DOT GLOBAL 
-  | DOT SECTION 
-  | DOT SKIP 
-  | DOT WORD     
+    ASCII
+  | END 
+  | EQU 
+  | EXTERN symbol_list {printf("parsed extern directive\n");}
+  | GLOBAL symbol_list
+  | SECTION 
+  | SKIP 
+  | WORD     
+  ;
+
+symbol_list:
+  SYMBOL
+  | symbol_list COMMA SYMBOL
   ;
 
 statement: 
@@ -139,5 +146,5 @@ csr:
 %%
 
 void yyerror(const char* c) {
-  printf("Parse error: \n");
+  printf("Parse error: token value %s, at line number %d \n", yylval, line_num);
 }

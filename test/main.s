@@ -1,5 +1,7 @@
 # file: main.s
 
+.ascii
+
 .extern handler, mathAdd, mathSub, mathMul, mathDiv
 
 .global my_start
