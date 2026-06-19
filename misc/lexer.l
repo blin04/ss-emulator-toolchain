@@ -14,7 +14,7 @@ BEQ         beq
 BGT         bgt
 BNE         bne
 CALL        call
-CSSRD       cssrd
+CSRRD       csrrd
 CSRWR       csrwr
 DIV         div
 HALT        halt
@@ -48,30 +48,30 @@ WORD        .word
 
 /* registers */ 
 
-CAUSE       cause
-REG         r(1[0-5]|[0-9])
-HANDLER     handler
-SP          sp
-STAUTS      status
-PC          pc
+CAUSE       %cause
+REG         %r(1[0-5]|[0-9])
+HANDLER     %handler
+SP          %sp
+STAUTS      %status
+PC          %pc
 
 /* definitions */ 
 
 BIN_INT     0(b|B)[01]*
 COMMA       ,
-COMMENT     #.*\n
+COMMENT     #.*
 COLON       :
 DEC_INT     [0-9]*
-DOLLAR      $
+DOLLAR      \$
 DOT         \.
 HEX_INT     0(x|X)[0-9a-fA-F]*
 NL          [\n|(\r\n)]
 LITERAL     {BIN_INT}|{OCT_INT}|{DEC_INT}|{HEX_INT}
-LPAR        [
+LPAR        \[
 OCT_INT     0[0-7]*
-PLUS        +
-PERCENT     %
-RPAR        ]
+PLUS        \+
+RPAR        \]
+STRING      \".*\"
 SYMBOL      ([a-z]|[A-Z]|[_.$])([a-z]|[A-Z]|[_.$]|[0-9])*
 
 %%
@@ -82,7 +82,7 @@ SYMBOL      ([a-z]|[A-Z]|[_.$])([a-z]|[A-Z]|[_.$]|[0-9])*
 {BGT}       return BGT;
 {BNE}       return BNE;
 {CALL}      return CALL;
-{CSSRD}     return CSSRD;
+{CSRRD}     return CSRRD;
 {CSRWR}     return CSRWR;
 {DIV}       return DIV;
 {HALT}      return HALT;
@@ -117,9 +117,14 @@ SYMBOL      ([a-z]|[A-Z]|[_.$])([a-z]|[A-Z]|[_.$]|[0-9])*
 {SP}        return SP;
 {STAUTS}    return STATUS;
 {PC}        return PC;
-{COMMA}     return COMMA;
-{DOT}       {printf("found dot\n"); return DOT;}
-{COMMENT}   return COMMENT;
+{COMMA}     { printf("found comma\n"); return COMMA; }
 {COLON}     return COLON;
+{DOLLAR}    return DOLLAR;
+{LPAR}      return LPAR;
+{PLUS}      return PLUS;
+{RPAR}      return RPAR;
+{DOT}       {printf("found dot\n"); return DOT;}
+{COMMENT}   {printf("found comment\n"); return COMMENT; }
 {SYMBOL}    {printf("found symbol\n"); return SYMBOL; } 
 {LITERAL}   return LITERAL;
+{STRING}    { printf("found strinrg\n"); return STRING; }

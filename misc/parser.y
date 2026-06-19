@@ -15,9 +15,9 @@
 
 %token HALT INT IRET CALL RET JMP BEQ BNE 
 %token BGT PUSH POP XCHNG ADD SUB MUL DIV 
-%token NOT AND OR XOR SHL SHR LD ST CSSRD CSRWR
+%token NOT AND OR XOR SHL SHR LD ST CSRRD CSRWR
 %token COMMA COMMENT COLON DOLLAR DOT LITERAL
-%token LPAR NL PLUS PERCENT RPAR SYMBOL
+%token LPAR NL PLUS PERCENT RPAR SYMBOL STRING
 %token ASCII END EQU EXTERN GLOBAL SECTION SKIP WORD
 %token CAUSE HANDLER PC REG SP STATUS 
 
@@ -25,53 +25,61 @@
 
 /* grammar rules */
 
-// a program is made up of zero or more lines
 program: 
     line
   | program NL line {printf("parsed program\n");}
   ;
 
-// a line is an instruction statement, a directive, 
-// a comment or just an empty line
 line:
     /* empty */ { line_num++; }
-  | directive { line_num++; printf("parsed directive\n"); }
-  | statement { line_num++; }
-  | label { line_num++; }
-  | label DOT directive { line_num++; }
-  | label statement { line_num++; }
+  | directive comment { line_num++; printf("parsed directive\n"); }
+  | statement comment { line_num++; }
+  | label comment { line_num++; }
+  | label directive comment { line_num++; }
+  | label statement comment { line_num++; }
   | COMMENT { line_num++; }
   ;
+
+comment:
+    /* empty */
+  | COMMENT
   
 label:
   SYMBOL COLON
   ;
   
 directive:
-    ASCII
+    ASCII STRING
   | END 
-  | EQU 
+  | EQU   // will be done later
   | EXTERN symbol_list {printf("parsed extern directive\n");}
   | GLOBAL symbol_list
-  | SECTION 
-  | SKIP 
-  | WORD     
+  | SECTION SYMBOL
+  | SKIP LITERAL
+  | WORD symbol_or_literal_list
   ;
 
 symbol_list:
-  SYMBOL
+    SYMBOL
   | symbol_list COMMA SYMBOL
   ;
+
+symbol_or_literal_list:
+    SYMBOL
+  | LITERAL
+  | symbol_or_literal_list COMMA SYMBOL
+  | symbol_or_literal_list COMMA LITERAL
+
 
 statement: 
     zero_op_instr
   | one_op_instr
-  | two_op_instr PERCENT gpr COMMA PERCENT gpr
-  | three_op_instr PERCENT gpr COMMA PERCENT gpr COMMA jump_operand
-  | LD data_operand COMMA PERCENT gpr
-  | ST PERCENT gpr COMMA data_operand
-  | CSSRD PERCENT csr COMMA PERCENT gpr
-  | CSRWR PERCENT gpr COMMA PERCENT csr
+  | two_op_instr gpr COMMA gpr {printf("parsed two operand instruciton\n"); }
+  | three_op_instr gpr COMMA gpr COMMA jump_operand
+  | LD data_operand COMMA gpr
+  | ST gpr COMMA data_operand
+  | CSRRD csr COMMA gpr
+  | CSRWR gpr COMMA csr
   ;
 
 zero_op_instr: 
@@ -82,13 +90,13 @@ zero_op_instr:
   ;
 
 one_op_instr: 
-    data_one_op_instr PERCENT gpr 
+    data_one_op_instr gpr 
   | jmp_one_op_instr jump_operand
   ;
 
 two_op_instr:
     XCHNG 
-  | ADD 
+  | ADD { printf("parsed add\n"); }
   | SUB 
   | MUL 
   | DIV 
