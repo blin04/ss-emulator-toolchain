@@ -1,6 +1,8 @@
 #include <iostream>
 #include <cstdio>
 
+#include "../inc/objfile.hpp"
+
 extern FILE* yyin;
 extern void yyparse();
 
@@ -11,10 +13,17 @@ int main() {
         return 1;
     }
 
+    ObjectFile* output = new ObjectFile();
+
     yyin = file;
     yyparse();
 
     fclose(file);
+
+    // Generate object file
+    output->generate();
+
+    delete output;
 
     return 0;
 }

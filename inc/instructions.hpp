@@ -3,4 +3,9 @@
 
 #include "line.hpp"
 
+class HaltInstruction : Line {
+public:
+    std::vector<uint8_t> generateBytes();
+};
+
 #endif

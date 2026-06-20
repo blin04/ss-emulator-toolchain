@@ -4,13 +4,15 @@
 #include <vector>
 
 class Section;
+class SymbolTable;
 
 class ObjectFile {
 public:
     void addSection(Section* s);
-    void serialize();
+    void generate();
 private:
     std::vector<Section*> sections;
+    SymbolTable* symbolTable;
 };
 
 #endif
