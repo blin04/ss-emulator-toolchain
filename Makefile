@@ -1,13 +1,14 @@
 LEXER_SRC = misc/lex.yy.c
 PARSER_SRC = misc/parser.tab.c
 PARSER_HDR = misc/parser.tab.h
+ASM_SRC = src/asm.cpp
 
-SOURCES = src/asm.c $(PARSER_SRC) $(LEXER_SRC)
+SOURCES = $(ASM_SRC) $(PARSER_SRC) $(LEXER_SRC)
 OUTPUT = build/asembler
 
 
 asembler: $(SOURCES)
-	gcc -I misc $(SOURCES) -o $(OUTPUT)
+	g++ -I misc -I inc $(SOURCES) -o $(OUTPUT)
 
 lexer: $(LEXER_SRC)
 

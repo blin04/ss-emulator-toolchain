@@ -1,13 +1,13 @@
-#include <stdio.h>
+#include <iostream>
+#include <cstdio>
 
-extern int yyparse();
 extern FILE* yyin;
+extern void yyparse();
 
 int main() {
     FILE* file = fopen("./test/main.s", "r");
-
     if (!file) {
-        printf("error: failed opening source file\n");
+        std::cout << "error: failed opening source file\n";
         return 1;
     }
 
