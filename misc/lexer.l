@@ -63,11 +63,11 @@ COMMENT     #.*
 COLON       :
 DEC_INT     [0-9]*
 DOLLAR      \$
-DOT         \.
 HEX_INT     0(x|X)[0-9a-fA-F]*
-NL          [\n|(\r\n)]
 LITERAL     {BIN_INT}|{OCT_INT}|{DEC_INT}|{HEX_INT}
 LPAR        \[
+MINUS       -
+NL          [\n|(\r\n)]
 OCT_INT     0[0-7]*
 PLUS        \+
 RPAR        \]
@@ -121,9 +121,9 @@ SYMBOL      ([a-z]|[A-Z]|[_.$])([a-z]|[A-Z]|[_.$]|[0-9])*
 {COLON}     return COLON;
 {DOLLAR}    return DOLLAR;
 {LPAR}      return LPAR;
+{MINUS}     return MINUS;
 {PLUS}      return PLUS;
 {RPAR}      return RPAR;
-{DOT}       {printf("found dot\n"); return DOT;}
 {COMMENT}   {printf("found comment\n"); return COMMENT; }
 {SYMBOL}    {printf("found symbol\n"); return SYMBOL; } 
 {LITERAL}   return LITERAL;

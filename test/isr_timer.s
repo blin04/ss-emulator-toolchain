@@ -4,9 +4,9 @@
 
 .section isr
 # prekidna rutina za tajmer
-# .equ line_feed, 0xA
-# .equ carriage_return, 0xD
-# .equ message_len, message_end - message_start
+.equ line_feed, 0xA
+.equ carriage_return, 0xD
+.equ message_len, message_end - message_start
 .global isr_timer
 isr_timer:
     push %r1

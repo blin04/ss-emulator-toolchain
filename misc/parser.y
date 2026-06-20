@@ -16,10 +16,12 @@
 %token HALT INT IRET CALL RET JMP BEQ BNE 
 %token BGT PUSH POP XCHNG ADD SUB MUL DIV 
 %token NOT AND OR XOR SHL SHR LD ST CSRRD CSRWR
-%token COMMA COMMENT COLON DOLLAR DOT LITERAL
-%token LPAR NL PLUS PERCENT RPAR SYMBOL STRING
+%token COMMA COMMENT COLON DOLLAR LITERAL
+%token LPAR MINUS NL PLUS RPAR SYMBOL STRING
 %token ASCII END EQU EXTERN GLOBAL SECTION SKIP WORD
 %token CAUSE HANDLER PC REG SP STATUS 
+
+%left PLUS MINUS
 
 %%
 
@@ -51,7 +53,7 @@ label:
 directive:
     ASCII STRING
   | END 
-  | EQU   // will be done later
+  | EQU SYMBOL COMMA exp 
   | EXTERN symbol_list {printf("parsed extern directive\n");}
   | GLOBAL symbol_list
   | SECTION SYMBOL
@@ -76,7 +78,7 @@ statement:
   | one_op_instr
   | two_op_instr gpr COMMA gpr {printf("parsed two operand instruciton\n"); }
   | three_op_instr gpr COMMA gpr COMMA jump_operand
-  | LD data_operand COMMA gpr
+  | LD data_operand COMMA gpr { printf("parsed LD instruction \n"); }
   | ST gpr COMMA data_operand
   | CSRRD csr COMMA gpr
   | CSRWR gpr COMMA csr
@@ -134,10 +136,16 @@ data_operand:
   | DOLLAR SYMBOL
   | LITERAL
   | SYMBOL
-  | PERCENT gpr
-  | LPAR PERCENT gpr RPAR
-  | LPAR PERCENT gpr PLUS LITERAL RPAR
-  | LPAR PERCENT gpr PLUS SYMBOL RPAR
+  | gpr
+  | LPAR gpr RPAR
+  | LPAR gpr PLUS LITERAL RPAR
+  | LPAR gpr PLUS SYMBOL RPAR
+
+exp:
+    exp PLUS exp
+  | exp MINUS exp
+  | SYMBOL
+  | LITERAL
 
 gpr:
     REG
