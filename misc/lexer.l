@@ -104,9 +104,9 @@ SYMBOL      ([a-z]|[A-Z]|[_.$])([a-z]|[A-Z]|[_.$]|[0-9])*
 {XCHNG}     return XCHNG;
 {XOR}       return XOR;
 {ASCII}     return ASCII;
-{END}       {printf("found end\n"); return END;}
+{END}       return END;
 {EQU}       return EQU;
-{EXTERN}    {printf("found extern\n"); return EXTERN;}
+{EXTERN}    return EXTERN;
 {GLOBAL}    return GLOBAL;
 {SECTION}   return SECTION;
 {SKIP}      return SKIP;
@@ -117,14 +117,14 @@ SYMBOL      ([a-z]|[A-Z]|[_.$])([a-z]|[A-Z]|[_.$]|[0-9])*
 {SP}        return SP;
 {STAUTS}    return STATUS;
 {PC}        return PC;
-{COMMA}     { printf("found comma\n"); return COMMA; }
+{COMMA}     return COMMA;
 {COLON}     return COLON;
 {DOLLAR}    return DOLLAR;
 {LPAR}      return LPAR;
 {MINUS}     return MINUS;
 {PLUS}      return PLUS;
 {RPAR}      return RPAR;
-{COMMENT}   {printf("found comment\n"); return COMMENT; }
-{SYMBOL}    {printf("found symbol\n"); return SYMBOL; } 
-{LITERAL}   return LITERAL;
-{STRING}    { printf("found strinrg\n"); return STRING; }
+{COMMENT}   return COMMENT;
+{SYMBOL}    return SYMBOL;
+{LITERAL}   { yylval.ival = atoi(yytext); return LITERAL; }
+{STRING}    return STRING;

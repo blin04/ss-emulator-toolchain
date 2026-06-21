@@ -1,5 +1,7 @@
 %{
   #include <stdio.h>
+  
+  #include "../inc/interface.h"
 
   int yylex();
   void yyerror(const char *);
@@ -8,7 +10,7 @@
 %}
 
 %union {
-
+  int ival;
 }
 
 /* declaring used tokens */
@@ -16,7 +18,7 @@
 %token HALT INT IRET CALL RET JMP BEQ BNE 
 %token BGT PUSH POP XCHNG ADD SUB MUL DIV 
 %token NOT AND OR XOR SHL SHR LD ST CSRRD CSRWR
-%token COMMA COMMENT COLON DOLLAR LITERAL
+%token COMMA COMMENT COLON DOLLAR <ival> LITERAL
 %token LPAR MINUS NL PLUS RPAR SYMBOL STRING
 %token ASCII END EQU EXTERN GLOBAL SECTION SKIP WORD
 %token CAUSE HANDLER PC REG SP STATUS 
@@ -34,11 +36,11 @@ program:
 
 line:
     /* empty */ { line_num++; }
-  | directive comment { line_num++; printf("parsed directive\n"); }
-  | statement comment { line_num++; }
-  | label comment { line_num++; }
-  | label directive comment { line_num++; }
-  | label statement comment { line_num++; }
+  | directive comment { line_num++; addDirective(); }
+  | statement comment { line_num++; addInstruction(); }
+  | label comment { line_num++; defineSymbol(); }
+  | label directive comment { line_num++; declareSymbolGlobal(); }
+  | label statement comment { line_num++; declareSymbolExtern(); }
   | COMMENT { line_num++; }
   ;
 
@@ -54,10 +56,12 @@ directive:
     ASCII STRING
   | END 
   | EQU SYMBOL COMMA exp 
-  | EXTERN symbol_list {printf("parsed extern directive\n");}
+  | EXTERN symbol_list
   | GLOBAL symbol_list
   | SECTION SYMBOL
-  | SKIP LITERAL
+  | SKIP LITERAL {
+      addSkipDirective($2);
+    }
   | WORD symbol_or_literal_list
   ;
 
@@ -76,9 +80,9 @@ symbol_or_literal_list:
 statement: 
     zero_op_instr
   | one_op_instr
-  | two_op_instr gpr COMMA gpr {printf("parsed two operand instruciton\n"); }
+  | two_op_instr gpr COMMA gpr
   | three_op_instr gpr COMMA gpr COMMA jump_operand
-  | LD data_operand COMMA gpr { printf("parsed LD instruction \n"); }
+  | LD data_operand COMMA gpr
   | ST gpr COMMA data_operand
   | CSRRD csr COMMA gpr
   | CSRWR gpr COMMA csr
@@ -98,7 +102,7 @@ one_op_instr:
 
 two_op_instr:
     XCHNG 
-  | ADD { printf("parsed add\n"); }
+  | ADD
   | SUB 
   | MUL 
   | DIV 
