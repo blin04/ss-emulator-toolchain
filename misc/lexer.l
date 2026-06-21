@@ -1,6 +1,8 @@
 %{
-#include "parser.tab.h"
 #include <stdio.h>
+#include <string.h>
+
+#include "parser.tab.h"
 %}
 
 %option noyywrap
@@ -126,5 +128,15 @@ SYMBOL      ([a-z]|[A-Z]|[_.$])([a-z]|[A-Z]|[_.$]|[0-9])*
 {RPAR}      return RPAR;
 {COMMENT}   return COMMENT;
 {SYMBOL}    return SYMBOL;
-{LITERAL}   { yylval.ival = atoi(yytext); return LITERAL; }
+{LITERAL}   { 
+                if (strlen(yytext) < 2 || yytext[0] != '0')
+                    yylval.lval = strtol(yytext, NULL, 10);
+                else if (yytext[1] == 'b' || yytext[1] == 'B')
+                    yylval.lval = strtol(yytext, NULL, 2); 
+                else if (yytext[1] == 'x' || yytext[1] == 'X')
+                    yylval.lval = strtol(yytext, NULL, 16); 
+                else 
+                    yylval.lval = strtol(yytext, NULL, 8); 
+                return LITERAL;
+            }
 {STRING}    return STRING;
