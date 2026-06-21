@@ -8,9 +8,15 @@ class SymbolTable;
 
 class ObjectFile {
 public:
-    void addSection(Section* s);
+    void newSection(std::string name);
     void generate();
+
+    static Section* getCurrentSection();
+    static ObjectFile* getInstance();
 private:
+    ObjectFile();
+
+    Section* currentSection;
     std::vector<Section*> sections;
     SymbolTable* symbolTable;
 };

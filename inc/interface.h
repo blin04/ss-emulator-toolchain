@@ -14,7 +14,7 @@
 void defineSymbol();
 void declareSymbolGlobal();
 void declareSymbolExtern();
-void startNewSection();
+void startNewSection(const char* name);
 void addInstruction();
 void addDirective();
 void addSkipDirective(int bytes_count);

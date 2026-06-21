@@ -127,7 +127,7 @@ SYMBOL      ([a-z]|[A-Z]|[_.$])([a-z]|[A-Z]|[_.$]|[0-9])*
 {PLUS}      return PLUS;
 {RPAR}      return RPAR;
 {COMMENT}   return COMMENT;
-{SYMBOL}    return SYMBOL;
+{SYMBOL}    { yylval.sval = yytext; return SYMBOL; }
 {LITERAL}   { 
                 if (strlen(yytext) < 2 || yytext[0] != '0')
                     yylval.lval = strtol(yytext, NULL, 10);

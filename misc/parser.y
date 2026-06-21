@@ -11,6 +11,7 @@
 
 %union {
   long lval;
+  char* sval;
 }
 
 /* declaring used tokens */
@@ -19,7 +20,7 @@
 %token BGT PUSH POP XCHNG ADD SUB MUL DIV 
 %token NOT AND OR XOR SHL SHR LD ST CSRRD CSRWR
 %token COMMA COMMENT COLON DOLLAR <lval> LITERAL
-%token LPAR MINUS NL PLUS RPAR SYMBOL STRING
+%token LPAR MINUS NL PLUS RPAR <sval> SYMBOL STRING
 %token ASCII END EQU EXTERN GLOBAL SECTION SKIP WORD
 %token CAUSE HANDLER PC REG SP STATUS 
 
@@ -54,11 +55,13 @@ label:
   
 directive:
     ASCII STRING
-  | END 
+  | END { YYACCEPT; /* end parsing successfully */ }
   | EQU SYMBOL COMMA exp 
   | EXTERN symbol_list
   | GLOBAL symbol_list
-  | SECTION SYMBOL
+  | SECTION SYMBOL {
+      startNewSection($2);
+    }
   | SKIP LITERAL {
       addSkipDirective($2);
     }

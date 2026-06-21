@@ -1,6 +1,10 @@
 #include <iostream>
 
+#include "../inc/directives.hpp"
 #include "../inc/interface.h"
+#include "../inc/line.hpp"
+#include "../inc/objfile.hpp"
+#include "../inc/section.hpp"
 
 void defineSymbol() {
     std::cout << "called defineSymbol()\n";
@@ -14,8 +18,9 @@ void declareSymbolExtern() {
     std::cout << "called declareSymbolExtern()\n";
 }
 
-void newSection() {
-    std::cout << "called newSection()\n";
+void startNewSection(const char* name) {
+    std::cout << "creating section named " << name << "\n";
+    ObjectFile::getInstance()->newSection(name);
 }
 
 void addInstruction() {
@@ -28,4 +33,6 @@ void addDirective() {
 
 void addSkipDirective(int bytes_count) {
     std::cout << "adding skip directive that skips " << bytes_count << " bytes\n";
+    Section* curr = ObjectFile::getCurrentSection();
+    curr->addLine(new SkipDirective(bytes_count));
 }
