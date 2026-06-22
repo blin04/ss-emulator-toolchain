@@ -8,6 +8,19 @@
   void yyerror(const char *);
 
   int line_num = 0;
+  int location_counter = 0;
+
+  int allSymbolsDefined(char** symbs) {
+    for (int i = 0; symbs[i] != NULL; i++) {
+      if (!isDefined(symbs[i])) {
+        // todo: add symbol name to message
+        yyerror("symbol not defined");
+        return 0;
+      }
+    } 
+    return 1;
+  }
+
 %}
 
 %union {
@@ -21,13 +34,15 @@
 %token HALT INT IRET CALL RET JMP BEQ BNE 
 %token BGT PUSH POP XCHNG ADD SUB MUL DIV 
 %token NOT AND OR XOR SHL SHR LD ST CSRRD CSRWR
-%token COMMA COMMENT COLON DOLLAR <lval> LITERAL
+%token COMMA COMMENT <sval> COLON DOLLAR <lval> LITERAL
 %token LPAR MINUS NL PLUS RPAR <sval> SYMBOL STRING
 %token ASCII END EQU EXTERN GLOBAL SECTION SKIP WORD
 %token CAUSE HANDLER PC REG SP STATUS 
 
 %left PLUS MINUS
 
+%type <sval> label;
+%type <arrval> symbol_list
 %type <arrval> symbol_or_literal_list
 
 %%
@@ -43,9 +58,9 @@ line:
     /* empty */ { line_num++; }
   | directive comment { line_num++; addDirective(); }
   | statement comment { line_num++; addInstruction(); }
-  | label comment { line_num++; defineSymbol(); }
-  | label directive comment { line_num++; declareSymbolGlobal(); }
-  | label statement comment { line_num++; declareSymbolExtern(); }
+  | label comment { line_num++; defineSymbol($1, location_counter); }
+  | label directive comment { line_num++; defineSymbol($1, location_counter); addDirective(); }
+  | label statement comment { line_num++; defineSymbol($1, location_counter); addInstruction(); }
   | COMMENT { line_num++; }
   ;
 
@@ -54,27 +69,37 @@ comment:
   | COMMENT
   
 label:
-  SYMBOL COLON
+  SYMBOL COLON { $$ = $1; }
   ;
   
 directive:
     ASCII STRING
   | END { YYACCEPT; /* end parsing successfully */ }
   | EQU SYMBOL COMMA exp 
-  | EXTERN symbol_list
-  | GLOBAL symbol_list
-  | SECTION SYMBOL {
-      startNewSection($2);
-    }
-  | SKIP LITERAL {
-      addSkipDirective($2);
-    }
+  | EXTERN symbol_list { declareSymbolsExtern($2); }
+  | GLOBAL symbol_list { if (!allSymbolsDefined($2)) { YYERROR; } declareSymbolsGlobal($2); }
+  | SECTION SYMBOL { startNewSection($2); }
+  | SKIP LITERAL { addSkipDirective($2); }
   | WORD symbol_or_literal_list { addWordDirective($2); }
   ;
 
 symbol_list:
-    SYMBOL
-  | symbol_list COMMA SYMBOL
+    SYMBOL {
+      char** arr = (char**)malloc(2 * sizeof(char*));
+      arr[0] = strdup($1);
+      arr[1] = NULL;
+      $$ = arr;
+    }
+  | symbol_list COMMA SYMBOL {
+      int count = 0;
+      while ($1[count] != NULL) count++;
+      char** arr = (char**)realloc($1, (count + 2) * sizeof(char*));
+
+      arr[count] = strdup($3);
+      arr[count + 1] = NULL;
+
+      $$ = arr;
+  }
   ;
 
 symbol_or_literal_list:
@@ -187,8 +212,8 @@ data_operand:
 exp:
     exp PLUS exp
   | exp MINUS exp
-  | SYMBOL
-  | LITERAL
+  | SYMBOL {}
+  | LITERAL {}
 
 gpr:
     REG
@@ -205,5 +230,6 @@ csr:
 %%
 
 void yyerror(const char* c) {
-  printf("Parse error: token value %s, at line number %d \n", yylval, line_num);
+  printf("Parse error: %s\n", c);
+  printf("(token value %s, at line number %d) \n", yylval, line_num);
 }

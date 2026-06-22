@@ -11,13 +11,14 @@
 
 // Functions
 
-void defineSymbol();
-void declareSymbolGlobal();
-void declareSymbolExtern();
-void startNewSection(const char* name);
 void addInstruction();
 void addDirective();
 void addSkipDirective(int bytes_count);
 void addWordDirective(char** initializers);
+void defineSymbol(const char* name, int value);
+void declareSymbolsGlobal(char** symbols);
+void declareSymbolsExtern(char** symbols);
+bool isDefined(const char* symbol);
+void startNewSection(const char* name);
 
 #endif

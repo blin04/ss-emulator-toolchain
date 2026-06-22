@@ -8,10 +8,13 @@ class SymbolTable;
 
 class ObjectFile {
 public:
+    ~ObjectFile();
+
     void newSection(std::string name);
     void generate();
 
     static Section* getCurrentSection();
+    static SymbolTable* getSymbolTable();
     static ObjectFile* getInstance();
 private:
     ObjectFile();
