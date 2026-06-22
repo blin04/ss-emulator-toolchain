@@ -1,5 +1,6 @@
 %{
   #include <stdio.h>
+  #include <string.h>
   
   #include "../inc/interface.h"
 
@@ -12,6 +13,7 @@
 %union {
   long lval;
   char* sval;
+  char** arrval;      // null-terminated array of pointers to symbols
 }
 
 /* declaring used tokens */
@@ -25,6 +27,8 @@
 %token CAUSE HANDLER PC REG SP STATUS 
 
 %left PLUS MINUS
+
+%type <arrval> symbol_or_literal_list
 
 %%
 
@@ -65,7 +69,7 @@ directive:
   | SKIP LITERAL {
       addSkipDirective($2);
     }
-  | WORD symbol_or_literal_list
+  | WORD symbol_or_literal_list { addWordDirective($2); }
   ;
 
 symbol_list:
@@ -74,11 +78,43 @@ symbol_list:
   ;
 
 symbol_or_literal_list:
-    SYMBOL
-  | LITERAL
-  | symbol_or_literal_list COMMA SYMBOL
-  | symbol_or_literal_list COMMA LITERAL
+    SYMBOL {
+      char** arr = (char**)malloc(2 * sizeof(char*));
+      arr[0] = strdup($1);
+      arr[1] = NULL;
+      $$ = arr;
+    }
+  | LITERAL {
+      char** arr = (char**)malloc(2 * sizeof(char*));
+      char buf[32];
+      sprintf(buf, "%ld", $1);    // maybe not ideal to convert number to string and back to string
+      arr[0] = strdup(buf);
+      arr[1] = NULL;
+      $$ = arr;
+    }
+  | symbol_or_literal_list COMMA SYMBOL {
+      int count = 0;
+      while ($1[count] != NULL) count++;
+      char** arr = (char**)realloc($1, (count + 2) * sizeof(char*));
 
+      arr[count] = strdup($3);
+      arr[count + 1] = NULL;
+
+      $$ = arr;
+    }
+  | symbol_or_literal_list COMMA LITERAL {
+      int count = 0;
+      while ($1[count] != NULL) count++;
+      char** arr = (char**)realloc($1, (count + 2) * sizeof(char*));
+
+      char buf[32];
+      sprintf(buf, "%ld", $3);    // same consideration as above
+      arr[count] = strdup(buf);
+      arr[count + 1] = NULL;
+
+      $$ = arr;
+    }
+  ;
 
 statement: 
     zero_op_instr

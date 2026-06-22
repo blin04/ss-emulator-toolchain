@@ -18,5 +18,6 @@ void startNewSection(const char* name);
 void addInstruction();
 void addDirective();
 void addSkipDirective(int bytes_count);
+void addWordDirective(char** initializers);
 
 #endif

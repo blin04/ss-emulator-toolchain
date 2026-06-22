@@ -36,3 +36,16 @@ void addSkipDirective(int bytes_count) {
     Section* curr = ObjectFile::getCurrentSection();
     curr->addLine(new SkipDirective(bytes_count));
 }
+
+void addWordDirective(char** initializers) {
+    Section* curr = ObjectFile::getCurrentSection();
+    std::vector<std::string> initializers_param;
+
+    for (int i = 0; initializers[i] != nullptr; i++) {
+        initializers_param.push_back(initializers[i]);
+        free(initializers[i]);
+    }
+    WordDirective* w = new WordDirective(initializers_param);
+    curr->addLine(new WordDirective(initializers_param));
+    free(initializers);
+}
