@@ -36,6 +36,8 @@ int getSymbolValue(const char* name) {
 
 bool isDefined(const char* symbol) { return ObjectFile::getSymbolTable()->isDefined(symbol); }
 
+bool isExtern(const char* symbol) { return ObjectFile::getSymbolTable()->isExtern(symbol); }
+
 void startNewSection(const char* name) {
     std::cout << "creating section named " << name << "\n";
     ObjectFile::getInstance()->newSection(name);

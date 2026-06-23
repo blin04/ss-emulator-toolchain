@@ -27,7 +27,17 @@ void SymbolTable::defineSymbol(std::string name, int sectionId, int offset, Symb
     }
 }
 
-bool SymbolTable::isDefined(std::string symbol) { return symbols.count(symbol); }
+bool SymbolTable::isDefined(std::string symbol) { 
+    if (symbols.count(symbol)) 
+        return symbols[symbol]->type != SYMB_UND; 
+    return false;
+}
+
+bool SymbolTable::isExtern(std::string symbol) {
+    if (symbols.count(symbol))
+        return symbols[symbol]->type == SYMB_UND;
+    return false;
+}
 
 void SymbolTable::declareSymbolGlobal(std::string name) { 
     if (!isDefined(name)) defineSymbol(name, 0, 0, SYMB_GLOB);

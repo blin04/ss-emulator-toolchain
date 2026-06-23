@@ -10,15 +10,33 @@
   int line_num = 1;
   int location_counter = 0;
 
-  int allSymbolsDefined(char** symbs) {
+  // helper function used for parsing
+  // of .extern directive
+  // checks if there is no already defined 
+  // symbol in the given array, since a defined
+  // symbol can't be declared extern 
+  int noDefinedSymbol(char** symbs) {
     for (int i = 0; symbs[i] != NULL; i++) {
-      if (!isDefined(symbs[i])) {
-        // todo: add symbol name to message
-        yyerror("symbol not defined");
+      if (isDefined(symbs[i])) {
+        // todo: add symbol name into error message
+        yyerror("defined symbol can't be declared as extern");
         return 0;
       }
     } 
     return 1;
+  }
+
+  // analogous to above function, this one
+  // checks if the given symbol is declared as external
+  // due to implementation details it only takes
+  // one symbol as an argument, not the whole array
+  int externSymbol(char* symb) {
+    if (isExtern(symb)) {
+      // todo: add symbol name into error message
+      yyerror("definition of a symbol previously declared as extern");
+      return 1;
+    }
+    return 0;
   }
 
 %}
@@ -62,7 +80,11 @@ line:
   | directive comment { location_counter += $1; }
   | statement comment { addInstruction(); location_counter += 4; }
   | label comment { defineSymbol($1, location_counter); }
-  | label directive comment { defineSymbol($1, location_counter); location_counter += $2; }
+  | label directive comment { 
+      if (externSymbol($1)) YYERROR;
+      defineSymbol($1, location_counter); 
+      location_counter += $2; 
+    }
   | label statement comment { defineSymbol($1, location_counter); addInstruction(); location_counter += 4; }
   | COMMENT
   ;
@@ -79,7 +101,7 @@ directive:
     ASCII STRING { addAsciiDirective($2); $$ = strlen($2) - 2; free($2); }    // -2 because of " and "
   | END { YYACCEPT; /* end parsing successfully */ }
   | EQU SYMBOL COMMA exp { defineSymbol($2, $4, true); $$ = 0;}
-  | EXTERN symbol_list { declareSymbolsExtern($2); $$ = 0; }
+  | EXTERN symbol_list { if (!noDefinedSymbol($2)) { YYERROR; } declareSymbolsExtern($2); $$ = 0; }
   | GLOBAL symbol_list { declareSymbolsGlobal($2); $$ = 0; }
   | SECTION SYMBOL { startNewSection($2); $$ = 0;}
   | SKIP LITERAL { addSkipDirective($2); $$ = $2;}
