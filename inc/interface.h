@@ -24,31 +24,8 @@ bool isDefined(const char* symbol);
 bool isExtern(const char* symbol);
 void startNewSection(const char* name, int offset);
 
-void haltHandler();
-void intHandler();
-void iretHandler();
-void callHandler();
-void retHandler();
-void jmpHandler();
-void beqHandler();
-void bneHandler();
-void bgtHandler();
-void pushHandler();
-void popHandler();
-void xchgHandler();
-void addHandler();
-void subHandler();
-void mulHandler();
-void divHandler();
-void notHandler();
-void andHandler();
-void orHandler();
-void xorHandler();
-void shlHandler();
-void shrHandler();
-void ldHandler();
-void stHandler();
-void csrrdHandler();
-void csrwrHandler();
+void zeroOpInstructionHandler(int stmt);
+void oneOpInstructionHandler(int stmt);
+void twoOpInstructionHandler(int stmt);
 
 #endif

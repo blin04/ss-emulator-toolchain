@@ -8,7 +8,7 @@
 %option noyywrap
 
 
-/* instructions */
+/* statements */
 
 ADD         add
 AND         and
@@ -87,9 +87,9 @@ SYMBOL      ([a-z]|[A-Z]|[_.$])([a-z]|[A-Z]|[_.$]|[0-9])*
 {CSRRD}     return CSRRD;
 {CSRWR}     return CSRWR;
 {DIV}       return DIV;
-{HALT}      return HALT;
-{INT}       return INT;
-{IRET}      return IRET;
+{HALT}      { yylval.ival = HALT; return HALT; }
+{INT}       { yylval.ival = INT; return INT; }
+{IRET}      { yylval.ival = IRET; return IRET; }
 {JMP}       return JMP;
 {LD}        return LD;
 {MUL}       return MUL;
@@ -98,7 +98,7 @@ SYMBOL      ([a-z]|[A-Z]|[_.$])([a-z]|[A-Z]|[_.$]|[0-9])*
 {OR}        return OR;
 {POP}       return POP;
 {PUSH}      return PUSH;
-{RET}       return RET;
+{RET}       { yylval.ival = RET; return RET; }
 {SHL}       return SHL;
 {SHR}       return SHR;
 {ST}        return ST;

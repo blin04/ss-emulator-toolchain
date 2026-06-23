@@ -35,6 +35,35 @@ public:
         cause
     };
 
+    static void haltHandler();
+    static void intHandler();
+    static void iretHandler();
+    static void retHandler();
+
+    static void notHandler();
+    static void pushHandler();
+    static void popHandler();
+    static void callHandler();
+
+    static void jmpHandler();
+    static void beqHandler();
+    static void bneHandler();
+    static void bgtHandler();
+    static void xchgHandler();
+    static void addHandler();
+    static void subHandler();
+    static void mulHandler();
+    static void divHandler();
+    static void andHandler();
+    static void orHandler();
+    static void xorHandler();
+    static void shlHandler();
+    static void shrHandler();
+    static void ldHandler();
+    static void stHandler();
+    static void csrrdHandler();
+    static void csrwrHandler();
+
 private:
     uint8_t b1;
     uint8_t b2;

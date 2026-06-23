@@ -47,11 +47,12 @@
   long lval;
   char* sval;
   char** arrval;      // null-terminated array of pointers to symbols
+//  Statement stmtval;
 }
 
 /* declaring used tokens */
 
-%token HALT INT IRET CALL RET JMP BEQ BNE 
+%token <ival> HALT INT IRET CALL RET JMP BEQ BNE 
 %token BGT PUSH POP XCHNG ADD SUB MUL DIV 
 %token NOT AND OR XOR SHL SHR LD ST CSRRD CSRWR
 %token COMMA COMMENT <sval> COLON DOLLAR <lval> LITERAL
@@ -66,7 +67,8 @@
 %type <sval> label;
 %type <arrval> symbol_list
 %type <arrval> symbol_or_literal_list
-// %type <instval> zero_op_instr;
+%type <ival> zero_op_stmt;
+// %type <stmtval> zero_op_stmt;
 // %type <instval> one_op_instr;
 // %type <instval> two_op_instr;
 
@@ -176,29 +178,37 @@ symbol_or_literal_list:
   ;
 
 statement: 
-    zero_op_instr
-  | one_op_instr
-  | two_op_instr gpr COMMA gpr
-  | three_op_instr gpr COMMA gpr COMMA jump_operand
+    zero_op_stmt { zeroOpInstructionHandler($1); }
+  | one_op_stmt
+  | two_op_stmt gpr COMMA gpr
+  | three_op_stmt gpr COMMA gpr COMMA jump_operand
   | LD data_operand COMMA gpr
   | ST gpr COMMA data_operand
   | CSRRD csr COMMA gpr
   | CSRWR gpr COMMA csr
   ;
 
-zero_op_instr: 
-    HALT { haltHandler(); }
-  | INT  { intHandler(); }
-  | IRET { iretHandler(); }
-  | RET  { retHandler(); }
+zero_op_stmt: 
+    HALT { $$ = $1; }
+  | INT  { $$ = $1; }
+  | IRET { $$ = $1; }
+  | RET  { $$ = $1; }
   ;
 
-one_op_instr: 
-    data_one_op_instr gpr 
-  | jmp_one_op_instr jump_operand
+one_op_stmt: 
+    data_one_op_stmt gpr {
+      // u zavisnosti od toga koja je naredba treba 
+      // pozvati razlicitu funkciju za hendlovanje
+    }
+  | jmp_one_op_stmt jump_operand {
+      // u zavisnosti od toga koja je naredba treba 
+      // pozvati razlicitu funkciju za hendlovanje
+      //
+      // dodatno treba parsirati operand
+    }
   ;
 
-two_op_instr:
+two_op_stmt:
     XCHNG 
   | ADD
   | SUB 
@@ -211,19 +221,19 @@ two_op_instr:
   | SHR
   ;
 
-three_op_instr: 
+three_op_stmt: 
     BEQ 
   | BNE 
   | BGT
   ;
 
-data_one_op_instr:
+data_one_op_stmt:
     PUSH
   | POP
   | NOT
   ;
 
-jmp_one_op_instr:
+jmp_one_op_stmt:
     CALL 
   | JMP
   ;

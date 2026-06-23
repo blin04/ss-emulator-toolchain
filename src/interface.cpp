@@ -7,6 +7,7 @@
 #include "../inc/objfile.hpp"
 #include "../inc/section.hpp"
 #include "../inc/symtab.hpp"
+#include "../misc/parser.tab.h"
 
 void defineSymbol(const char* name, int value, bool equ_defined) {
     // section id is 0 for now
@@ -81,44 +82,19 @@ int addWordDirective(char** initializers) {
     return 4 * i;
 }
 
-void haltHandler() {
-    ObjectFile::getCurrentSection()->addLine(
-        new Instruction(0, 0, 0, 0, 0, 0)
-    );
-}
-
-void intHandler() {
-    ObjectFile::getCurrentSection()->addLine(
-        new Instruction(1, 0, 0, 0, 0, 0)
-    );
-}
-
-void iretHandler() {
-    // pop pc
-    uint8_t inst = 0b1001;        // data loading instr
-    uint8_t mode = 0b0011;
-    uint8_t a = Instruction::GPR::PC;
-    uint8_t b = Instruction::GPR::SP;
-    ObjectFile::getCurrentSection()->addLine(
-        new Instruction(inst, mode, a, b, 0, 0)
-    );
-
-    // pop status
-    mode = 0b0111;
-    a = Instruction::CSR::status;
-    b = Instruction::GPR::SP;
-    ObjectFile::getCurrentSection()->addLine(
-        new Instruction(inst, mode, a, b, 0, 0)
-    );
-}
-
-void retHandler() {
-    // pop pc
-    uint8_t inst = 0b1001;        // data loading instr
-    uint8_t mode = 0b0011;
-    uint8_t a = Instruction::GPR::PC;
-    uint8_t b = Instruction::GPR::SP;
-    ObjectFile::getCurrentSection()->addLine(
-        new Instruction(inst, mode, a, b, 0, 0)
-    );
+void zeroOpInstructionHandler(int stmt) {
+    switch (stmt) {
+        case yytoken_kind_t::HALT:
+            Instruction::haltHandler();
+            break;
+        case yytoken_kind_t::INT:
+            Instruction::intHandler();
+            break;
+        case yytoken_kind_t::IRET:
+            Instruction::iretHandler();
+            break;
+        case yytoken_kind_t::RET:
+            Instruction::retHandler();
+            break;
+    }
 }
