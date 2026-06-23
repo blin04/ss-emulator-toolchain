@@ -40,12 +40,12 @@ public:
     static void iretHandler();
     static void retHandler();
 
-    static void notHandler();
-    static void pushHandler();
-    static void popHandler();
-    static void callHandler();
+    static void notHandler(int op);
+    static void pushHandler(int op);
+    static void popHandler(int op);
+    static void callHandler(int op);
+    static void jmpHandler(int op);
 
-    static void jmpHandler();
     static void beqHandler();
     static void bneHandler();
     static void bgtHandler();

@@ -24,8 +24,8 @@ bool isDefined(const char* symbol);
 bool isExtern(const char* symbol);
 void startNewSection(const char* name, int offset);
 
-void zeroOpInstructionHandler(int stmt);
-void oneOpInstructionHandler(int stmt);
-void twoOpInstructionHandler(int stmt);
+void zeroOpStatementHandler(int stmt);
+void oneOpStatementHandler(int stmt, int op);
+void twoOpStatementHandler(int stmt, int op);
 
 #endif

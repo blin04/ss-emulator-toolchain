@@ -49,6 +49,39 @@ void Instruction::retHandler() {
     uint8_t a = Instruction::GPR::PC;
     uint8_t b = Instruction::GPR::SP;
     ObjectFile::getCurrentSection()->addLine(
-        new Instruction(inst, mode, a, b, 0, 0)
+        new Instruction(
+            0b1001, 
+            0b0011, 
+            Instruction::GPR::PC, 
+            Instruction::GPR::SP, 
+            0, 0)
     );
+}
+
+void Instruction::notHandler(int op) {
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(0b0110, 0, op, op, 0, 0)
+    );
+}
+
+void Instruction::pushHandler(int op) {
+    // sp <= sp - 4, mem32[sp] <= gpr
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(0b1000, 1, Instruction::GPR::SP, 0, op, -4)
+    );
+}
+
+void Instruction::popHandler(int op) {
+    // gpr <= mem32[sp], sp <= sp + 4
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(0b1001, 3, op, Instruction::GPR::SP, 0, 4)
+    );
+}
+
+void Instruction::callHandler(int op) {
+
+}
+
+void Instruction::jmpHandler(int op) {
+
 }

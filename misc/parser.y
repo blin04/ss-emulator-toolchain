@@ -44,7 +44,6 @@
 
 %union {
   int ival;
-  long lval;
   char* sval;
   char** arrval;      // null-terminated array of pointers to symbols
 //  Statement stmtval;
@@ -52,13 +51,17 @@
 
 /* declaring used tokens */
 
-%token <ival> HALT INT IRET CALL RET JMP BEQ BNE 
-%token BGT PUSH POP XCHNG ADD SUB MUL DIV 
-%token NOT AND OR XOR SHL SHR LD ST CSRRD CSRWR
-%token COMMA COMMENT <sval> COLON DOLLAR <lval> LITERAL
+%token <ival> HALT <ival> INT <ival> IRET <ival> CALL 
+%token <ival> RET <ival> JMP <ival> BEQ <ival> BNE 
+%token <ival> BGT <ival> PUSH <ival> POP <ival> XCHNG 
+%token <ival> ADD <ival> SUB <ival> MUL <ival> DIV 
+%token <ival> NOT <ival> AND <ival> OR <ival> XOR 
+%token <ival> SHL <ival> SHR <ival> LD <ival> ST 
+%token <ival> CSRRD <ival> CSRWR
+%token COMMA COMMENT <sval> COLON DOLLAR <ival> LITERAL
 %token LPAR MINUS NL PLUS RPAR <sval> SYMBOL <sval> STRING
 %token ASCII END EQU EXTERN GLOBAL SECTION SKIP WORD
-%token CAUSE HANDLER PC REG SP STATUS 
+%token CAUSE HANDLER PC <ival> REG SP STATUS 
 
 %left PLUS MINUS
 
@@ -68,8 +71,10 @@
 %type <arrval> symbol_list
 %type <arrval> symbol_or_literal_list
 %type <ival> zero_op_stmt;
-// %type <stmtval> zero_op_stmt;
-// %type <instval> one_op_instr;
+%type <ival> data_one_op_stmt;
+%type <ival> jmp_one_op_stmt;
+%type <ival> jump_operand;
+%type <ival> gpr;
 // %type <instval> two_op_instr;
 
 %%
@@ -178,7 +183,7 @@ symbol_or_literal_list:
   ;
 
 statement: 
-    zero_op_stmt { zeroOpInstructionHandler($1); }
+    zero_op_stmt { zeroOpStatementHandler($1); }
   | one_op_stmt
   | two_op_stmt gpr COMMA gpr
   | three_op_stmt gpr COMMA gpr COMMA jump_operand
@@ -189,23 +194,15 @@ statement:
   ;
 
 zero_op_stmt: 
-    HALT { $$ = $1; }
-  | INT  { $$ = $1; }
-  | IRET { $$ = $1; }
-  | RET  { $$ = $1; }
-  ;
+    HALT
+  | INT
+  | IRET
+  | RET
+  ;                  
 
 one_op_stmt: 
-    data_one_op_stmt gpr {
-      // u zavisnosti od toga koja je naredba treba 
-      // pozvati razlicitu funkciju za hendlovanje
-    }
-  | jmp_one_op_stmt jump_operand {
-      // u zavisnosti od toga koja je naredba treba 
-      // pozvati razlicitu funkciju za hendlovanje
-      //
-      // dodatno treba parsirati operand
-    }
+    data_one_op_stmt gpr { oneOpStatementHandler($1, $2); }
+  | jmp_one_op_stmt jump_operand { oneOpStatementHandler($1, $2); }
   ;
 
 two_op_stmt:
@@ -234,13 +231,13 @@ data_one_op_stmt:
   ;
 
 jmp_one_op_stmt:
-    CALL 
+    CALL
   | JMP
   ;
 
 jump_operand:
-    LITERAL
-  | SYMBOL
+    LITERAL 
+  | SYMBOL { $$ = getSymbolValue($1); }
   ;
 
 data_operand:
@@ -261,8 +258,8 @@ exp:
 
 gpr:
     REG
-  | SP
-  | PC
+  | SP { $$ = 14; }
+  | PC { $$ = 15; }
   ;
 
 csr:

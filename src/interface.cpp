@@ -82,7 +82,7 @@ int addWordDirective(char** initializers) {
     return 4 * i;
 }
 
-void zeroOpInstructionHandler(int stmt) {
+void zeroOpStatementHandler(int stmt) {
     switch (stmt) {
         case yytoken_kind_t::HALT:
             Instruction::haltHandler();
@@ -95,6 +95,20 @@ void zeroOpInstructionHandler(int stmt) {
             break;
         case yytoken_kind_t::RET:
             Instruction::retHandler();
+            break;
+    }
+}
+
+void oneOpStatementHandler(int stmt, int op) {
+    switch (stmt) {
+        case yytoken_kind_t::NOT:
+            Instruction::notHandler(op);
+            break;
+        case yytoken_kind_t::PUSH:
+            Instruction::pushHandler(op);
+            break;
+        case yytoken_kind_t::POP:
+            Instruction::popHandler(op);
             break;
     }
 }

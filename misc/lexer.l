@@ -93,11 +93,11 @@ SYMBOL      ([a-z]|[A-Z]|[_.$])([a-z]|[A-Z]|[_.$]|[0-9])*
 {JMP}       return JMP;
 {LD}        return LD;
 {MUL}       return MUL;
-{NOT}       return NOT;
+{NOT}       { yylval.ival = NOT; return NOT; }
 {NL}        return NL;
 {OR}        return OR;
-{POP}       return POP;
-{PUSH}      return PUSH;
+{POP}       { yylval.ival = POP; return POP; }
+{PUSH}      { yylval.ival = PUSH; return PUSH; }
 {RET}       { yylval.ival = RET; return RET; }
 {SHL}       return SHL;
 {SHR}       return SHR;
@@ -114,7 +114,7 @@ SYMBOL      ([a-z]|[A-Z]|[_.$])([a-z]|[A-Z]|[_.$]|[0-9])*
 {SKIP}      return SKIP;
 {WORD}      return WORD;
 {CAUSE}     return CAUSE;
-{REG}       return REG;
+{REG}       { yylval.ival = atoi(yytext + 2); return REG; }
 {HANDLER}   return HANDLER;
 {SP}        return SP;
 {STAUTS}    return STATUS;
@@ -130,13 +130,13 @@ SYMBOL      ([a-z]|[A-Z]|[_.$])([a-z]|[A-Z]|[_.$]|[0-9])*
 {SYMBOL}    { yylval.sval = strdup(yytext); return SYMBOL; }
 {LITERAL}   { 
                 if (strlen(yytext) < 2 || yytext[0] != '0')
-                    yylval.lval = strtol(yytext, NULL, 10);
+                    yylval.ival = (int)strtol(yytext, NULL, 10);
                 else if (yytext[1] == 'b' || yytext[1] == 'B')
-                    yylval.lval = strtol(yytext, NULL, 2); 
+                    yylval.ival = (int)strtol(yytext, NULL, 2); 
                 else if (yytext[1] == 'x' || yytext[1] == 'X')
-                    yylval.lval = strtol(yytext, NULL, 16); 
+                    yylval.ival = (int)strtol(yytext, NULL, 16); 
                 else 
-                    yylval.lval = strtol(yytext, NULL, 8); 
+                    yylval.ival = (int)strtol(yytext, NULL, 8); 
                 return LITERAL;
             }
 {STRING}    { yylval.sval = strdup(yytext); return STRING; }
