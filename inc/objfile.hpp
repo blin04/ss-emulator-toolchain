@@ -10,8 +10,9 @@ class ObjectFile {
 public:
     ~ObjectFile();
 
-    void newSection(std::string name);
     void generate();
+    void newSection(std::string name);
+    void printSymbolTable();
 
     static Section* getCurrentSection();
     static SymbolTable* getSymbolTable();

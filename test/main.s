@@ -5,6 +5,7 @@
 .section code
 .equ initial_sp, 0xFFFFFEFE
 .equ timer_config, 0xFFFFFF10
+.extern test
 my_start:
     ld $initial_sp, %sp
     ld $handler, %r1

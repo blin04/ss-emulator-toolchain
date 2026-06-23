@@ -15,10 +15,11 @@ void addInstruction();
 void addDirective();
 void addAsciiDirective(const char* str);
 void addSkipDirective(int bytes_count);
-void addWordDirective(char** initializers);
-void defineSymbol(const char* name, int value);
+int addWordDirective(char** initializers);
+void defineSymbol(const char* name, int value, bool equ_defined = false);
 void declareSymbolsGlobal(char** symbols);
 void declareSymbolsExtern(char** symbols);
+int getSymbolValue(const char* name);
 bool isDefined(const char* symbol);
 void startNewSection(const char* name);
 

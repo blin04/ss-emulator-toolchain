@@ -56,3 +56,5 @@ void ObjectFile::generate() {
 
     out.close();
 }
+
+void ObjectFile::printSymbolTable() { std::cout << "Symbol table for file ...: \n"; symbolTable->print(); }

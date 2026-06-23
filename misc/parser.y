@@ -7,7 +7,7 @@
   int yylex();
   void yyerror(const char *);
 
-  int line_num = 0;
+  int line_num = 1;
   int location_counter = 0;
 
   int allSymbolsDefined(char** symbs) {
@@ -24,6 +24,7 @@
 %}
 
 %union {
+  int ival;
   long lval;
   char* sval;
   char** arrval;      // null-terminated array of pointers to symbols
@@ -41,6 +42,8 @@
 
 %left PLUS MINUS
 
+%type <ival> directive      // value to add to location counter
+%type <ival> exp;
 %type <sval> label;
 %type <arrval> symbol_list
 %type <arrval> symbol_or_literal_list
@@ -50,18 +53,18 @@
 /* grammar rules */
 
 program: 
-    line
-  | program NL line {printf("parsed program\n");}
+    line { line_num++; }
+  | program NL line { line_num++; }
   ;
 
 line:
-    /* empty */ { line_num++; }
-  | directive comment { line_num++; addDirective(); }
-  | statement comment { line_num++; addInstruction(); }
-  | label comment { line_num++; defineSymbol($1, location_counter); }
-  | label directive comment { line_num++; defineSymbol($1, location_counter); addDirective(); }
-  | label statement comment { line_num++; defineSymbol($1, location_counter); addInstruction(); }
-  | COMMENT { line_num++; }
+    /* empty */
+  | directive comment { location_counter += $1; }
+  | statement comment { addInstruction(); location_counter += 4; }
+  | label comment { defineSymbol($1, location_counter); }
+  | label directive comment { defineSymbol($1, location_counter); location_counter += $2; }
+  | label statement comment { defineSymbol($1, location_counter); addInstruction(); location_counter += 4; }
+  | COMMENT
   ;
 
 comment:
@@ -73,17 +76,14 @@ label:
   ;
   
 directive:
-    ASCII STRING {  addAsciiDirective($2); location_counter += strlen($2); free($2); }
+    ASCII STRING { addAsciiDirective($2); $$ = strlen($2) - 2; free($2); }    // -2 because of " and "
   | END { YYACCEPT; /* end parsing successfully */ }
-  | EQU SYMBOL COMMA exp 
-  | EXTERN symbol_list { declareSymbolsExtern($2); }
-  | GLOBAL symbol_list { if (!allSymbolsDefined($2)) { YYERROR; } declareSymbolsGlobal($2); }
-  | SECTION SYMBOL { startNewSection($2); }
-  | SKIP LITERAL { addSkipDirective($2); location_counter += $2;}
-  | WORD symbol_or_literal_list { 
-      addWordDirective($2); 
-      for (int i = 0; $2[i] != NULL; i++) location_counter += 4;
-    }
+  | EQU SYMBOL COMMA exp { defineSymbol($2, $4, true); $$ = 0;}
+  | EXTERN symbol_list { declareSymbolsExtern($2); $$ = 0; }
+  | GLOBAL symbol_list { declareSymbolsGlobal($2); $$ = 0; }
+  | SECTION SYMBOL { startNewSection($2); $$ = 0;}
+  | SKIP LITERAL { addSkipDirective($2); $$ = $2;}
+  | WORD symbol_or_literal_list { $$ = addWordDirective($2); }
   ;
 
 symbol_list:
@@ -213,10 +213,10 @@ data_operand:
   | LPAR gpr PLUS SYMBOL RPAR
 
 exp:
-    exp PLUS exp
-  | exp MINUS exp
-  | SYMBOL {}
-  | LITERAL {}
+    exp PLUS exp {$$ = $1 + $3; }
+  | exp MINUS exp { $$ = $1 - $3; }
+  | SYMBOL { $$ = getSymbolValue($1); }
+  | LITERAL { $$ = $1; }
 
 gpr:
     REG
