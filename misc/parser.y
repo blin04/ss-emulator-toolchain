@@ -8,7 +8,8 @@
   void yyerror(const char *);
 
   int line_num = 1;
-  int location_counter = 0;
+  int location_counter = 0;     // address inside a section
+  int total_offset = 0;         // total offset from the beginning of the file
 
   // helper function used for parsing
   // of .extern directive
@@ -103,7 +104,12 @@ directive:
   | EQU SYMBOL COMMA exp { defineSymbol($2, $4, true); $$ = 0;}
   | EXTERN symbol_list { if (!noDefinedSymbol($2)) { YYERROR; } declareSymbolsExtern($2); $$ = 0; }
   | GLOBAL symbol_list { declareSymbolsGlobal($2); $$ = 0; }
-  | SECTION SYMBOL { startNewSection($2); $$ = 0;}
+  | SECTION SYMBOL { 
+      total_offset += location_counter; 
+      startNewSection($2, total_offset); 
+      location_counter = 0;       // resets the location counter
+      $$ = 0;
+    }
   | SKIP LITERAL { addSkipDirective($2); $$ = $2;}
   | WORD symbol_or_literal_list { $$ = addWordDirective($2); }
   ;

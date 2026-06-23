@@ -10,8 +10,12 @@
 void defineSymbol(const char* name, int value, bool equ_defined) {
     // section id is 0 for now
     std::cout << "defined " << name << " with value " << value << "\n";
-    ObjectFile::getSymbolTable()->defineSymbol(name, 0, value, 
-        equ_defined ? SymbolTable::SYMB_ABS : SymbolTable::SYMB_LOC);
+    ObjectFile::getSymbolTable()->defineSymbol(
+        name, 
+        ObjectFile::getCurrentSection()->getSectionID(), 
+        value, 
+        equ_defined ? SymbolTable::SYMB_ABS : SymbolTable::SYMB_LOC
+    );
 }
 
 void declareSymbolsGlobal(char** symbs) {
@@ -38,9 +42,9 @@ bool isDefined(const char* symbol) { return ObjectFile::getSymbolTable()->isDefi
 
 bool isExtern(const char* symbol) { return ObjectFile::getSymbolTable()->isExtern(symbol); }
 
-void startNewSection(const char* name) {
+void startNewSection(const char* name, int offset) {
     std::cout << "creating section named " << name << "\n";
-    ObjectFile::getInstance()->newSection(name);
+    ObjectFile::getInstance()->newSection(name, offset);
 }
 
 void addInstruction() {

@@ -1,6 +1,8 @@
 #ifndef _OBJECT_FILE_H_
 #define _OBJECT_FILE_H_
 
+
+#include <string>
 #include <vector>
 
 class Section;
@@ -11,7 +13,7 @@ public:
     ~ObjectFile();
 
     void generate();
-    void newSection(std::string name);
+    void newSection(std::string name, int offset);
     void printSymbolTable();
 
     static Section* getCurrentSection();

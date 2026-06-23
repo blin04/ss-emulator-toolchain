@@ -9,14 +9,22 @@ class RelocationTable;
 
 class Section {
 public:
-    Section(std::string name);
+    Section(std::string name, int offset);
+    ~Section();
+
     void addRelocation();
     void addLine(Line*);
+    int getSectionID();
     void serialize(std::ofstream& file);
 private:
-    std::string name;
+    int index;
     std::vector<Line*> lines;
+    std::string name;
+    int offset;
+    int startAddress;
     RelocationTable* relocations; 
+
+    static int counter;
 };
 
 #endif

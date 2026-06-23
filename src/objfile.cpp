@@ -30,10 +30,10 @@ SymbolTable* ObjectFile::getSymbolTable() {
     return getInstance()->symbolTable;
 }
 
-void ObjectFile::newSection(std::string name) {
+void ObjectFile::newSection(std::string name, int offset) {
     if (currentSection != nullptr)
         sections.push_back(currentSection);
-    Section* s = new Section(name); 
+    Section* s = new Section(name, offset); 
     currentSection = s;
 }
 

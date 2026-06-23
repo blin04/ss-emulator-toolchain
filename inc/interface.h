@@ -22,6 +22,6 @@ void declareSymbolsExtern(char** symbols);
 int getSymbolValue(const char* name);
 bool isDefined(const char* symbol);
 bool isExtern(const char* symbol);
-void startNewSection(const char* name);
+void startNewSection(const char* name, int offset);
 
 #endif
