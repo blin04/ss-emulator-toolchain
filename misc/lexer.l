@@ -139,4 +139,4 @@ SYMBOL      ([a-z]|[A-Z]|[_.$])([a-z]|[A-Z]|[_.$]|[0-9])*
                     yylval.lval = strtol(yytext, NULL, 8); 
                 return LITERAL;
             }
-{STRING}    return STRING;
+{STRING}    { yylval.sval = strdup(yytext); return STRING; }

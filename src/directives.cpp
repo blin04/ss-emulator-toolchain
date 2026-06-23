@@ -1,5 +1,14 @@
 #include "../inc/directives.hpp"
 
+AsciiDirective::AsciiDirective(const char* str) : str(str) {}
+
+std::vector<uint8_t> AsciiDirective::generateBytes() {
+    std::vector<uint8_t> bytes;
+    for (int i = 0; i < str.size(); i++)
+        bytes.push_back(static_cast<uint8_t>(str[i]));
+    return bytes;
+}
+
 SkipDirective::SkipDirective(int bytesCount) : count(bytesCount) {}
 
 std::vector<uint8_t> SkipDirective::generateBytes() {

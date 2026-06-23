@@ -35,7 +35,7 @@
 %token BGT PUSH POP XCHNG ADD SUB MUL DIV 
 %token NOT AND OR XOR SHL SHR LD ST CSRRD CSRWR
 %token COMMA COMMENT <sval> COLON DOLLAR <lval> LITERAL
-%token LPAR MINUS NL PLUS RPAR <sval> SYMBOL STRING
+%token LPAR MINUS NL PLUS RPAR <sval> SYMBOL <sval> STRING
 %token ASCII END EQU EXTERN GLOBAL SECTION SKIP WORD
 %token CAUSE HANDLER PC REG SP STATUS 
 
@@ -73,7 +73,7 @@ label:
   ;
   
 directive:
-    ASCII STRING
+    ASCII STRING { addAsciiDirective($2); free($2); }
   | END { YYACCEPT; /* end parsing successfully */ }
   | EQU SYMBOL COMMA exp 
   | EXTERN symbol_list { declareSymbolsExtern($2); }

@@ -25,4 +25,4 @@ void SymbolTable::declareSymbolExtern(std::string name) {
     /* add correct entry to symbol table */
 }
 
-int SymbolTable::getSymbolValue(std::string symbol) { /* what here ? */ }
+int SymbolTable::getSymbolValue(std::string symbol) { /* what here ? */ return 0; }

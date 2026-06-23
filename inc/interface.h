@@ -13,6 +13,7 @@
 
 void addInstruction();
 void addDirective();
+void addAsciiDirective(const char* str);
 void addSkipDirective(int bytes_count);
 void addWordDirective(char** initializers);
 void defineSymbol(const char* name, int value);

@@ -44,6 +44,11 @@ void addDirective() {
     std::cout << "called addDirective()\n";
 }
 
+void addAsciiDirective(const char* str) {
+    Section* curr = ObjectFile::getCurrentSection();
+    curr->addLine(new AsciiDirective(str));
+}
+
 void addSkipDirective(int bytes_count) {
     std::cout << "adding skip directive that skips " << bytes_count << " bytes\n";
     Section* curr = ObjectFile::getCurrentSection();

@@ -5,6 +5,14 @@
 
 #include "line.hpp"
 
+class AsciiDirective : public Line {
+public:
+    AsciiDirective(const char* str);
+    std::vector<uint8_t> generateBytes();
+private:
+    std::string str;
+};
+
 class SkipDirective : public Line {
 public:
     SkipDirective(int bytesCount);
@@ -19,14 +27,6 @@ public:
     std::vector<uint8_t> generateBytes();
 private:
     std::vector<std::string> symbols;
-};
-
-class AsciiDirective : public Line {
-public:
-    AsciiDirective(std::string str);
-    std::vector<uint8_t> generateBytes();
-private:
-    std::vector<std::string> str;
 };
 
 #endif
