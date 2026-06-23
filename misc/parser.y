@@ -7,10 +7,6 @@
   int yylex();
   void yyerror(const char *);
 
-  int line_num = 1;
-  int location_counter = 0;     // address inside a section
-  int total_offset = 0;         // total offset from the beginning of the file
-
   // helper function used for parsing
   // of .extern directive
   // checks if there is no already defined 
@@ -40,6 +36,10 @@
     return 0;
   }
 
+  int line_num = 1;
+  int location_counter = 0;     // address inside a section
+  int total_offset = 0;         // total offset from the beginning of the file
+
 %}
 
 %union {
@@ -66,6 +66,9 @@
 %type <sval> label;
 %type <arrval> symbol_list
 %type <arrval> symbol_or_literal_list
+// %type <instval> zero_op_instr;
+// %type <instval> one_op_instr;
+// %type <instval> two_op_instr;
 
 %%
 
@@ -79,14 +82,14 @@ program:
 line:
     /* empty */
   | directive comment { location_counter += $1; }
-  | statement comment { addInstruction(); location_counter += 4; }
+  | statement comment { location_counter += 4; }
   | label comment { defineSymbol($1, location_counter); }
   | label directive comment { 
       if (externSymbol($1)) YYERROR;
       defineSymbol($1, location_counter); 
       location_counter += $2; 
     }
-  | label statement comment { defineSymbol($1, location_counter); addInstruction(); location_counter += 4; }
+  | label statement comment { defineSymbol($1, location_counter); location_counter += 4; }
   | COMMENT
   ;
 
@@ -184,10 +187,10 @@ statement:
   ;
 
 zero_op_instr: 
-    HALT 
-  | INT 
-  | IRET 
-  | RET 
+    HALT { haltHandler(); }
+  | INT  { intHandler(); }
+  | IRET { iretHandler(); }
+  | RET  { retHandler(); }
   ;
 
 one_op_instr: 

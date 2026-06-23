@@ -1,0 +1,45 @@
+#ifndef _INSTRUCTION_H_
+#define _INSTRUCTION_H_
+
+#include "line.hpp"
+
+class Instruction : public Line {
+public: 
+    Instruction(uint8_t oc, uint8_t mod, uint8_t regA, uint8_t regB, uint8_t regC, int disp);
+    std::vector<uint8_t> generateBytes();
+
+    enum GPR : uint8_t {
+        R0 = 0,
+        R1,
+        R2,
+        R3,
+        R4,
+        R5,
+        R6,
+        R7,
+        R8,
+        R9,
+        R10,
+        R11,
+        R12,
+        R13,
+        R14,
+        R15,
+        SP = R14,
+        PC = R15
+    };
+
+    enum CSR : uint8_t {
+        status = 0,
+        handler,
+        cause
+    };
+
+private:
+    uint8_t b1;
+    uint8_t b2;
+    uint8_t b3;
+    uint8_t b4;
+};
+
+#endif

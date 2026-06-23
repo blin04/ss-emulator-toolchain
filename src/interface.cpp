@@ -2,6 +2,7 @@
 
 #include "../inc/directives.hpp"
 #include "../inc/interface.h"
+#include "../inc/instruction.hpp"
 #include "../inc/line.hpp"
 #include "../inc/objfile.hpp"
 #include "../inc/section.hpp"
@@ -47,10 +48,6 @@ void startNewSection(const char* name, int offset) {
     ObjectFile::getInstance()->newSection(name, offset);
 }
 
-void addInstruction() {
-    std::cout << "called addInstruction()\n";
-}
-
 void addDirective() {
     std::cout << "called addDirective()\n";
 }
@@ -82,4 +79,46 @@ int addWordDirective(char** initializers) {
     curr->addLine(new WordDirective(initializers_param));
     free(initializers);
     return 4 * i;
+}
+
+void haltHandler() {
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(0, 0, 0, 0, 0, 0)
+    );
+}
+
+void intHandler() {
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(1, 0, 0, 0, 0, 0)
+    );
+}
+
+void iretHandler() {
+    // pop pc
+    uint8_t inst = 0b1001;        // data loading instr
+    uint8_t mode = 0b0011;
+    uint8_t a = Instruction::GPR::PC;
+    uint8_t b = Instruction::GPR::SP;
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(inst, mode, a, b, 0, 0)
+    );
+
+    // pop status
+    mode = 0b0111;
+    a = Instruction::CSR::status;
+    b = Instruction::GPR::SP;
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(inst, mode, a, b, 0, 0)
+    );
+}
+
+void retHandler() {
+    // pop pc
+    uint8_t inst = 0b1001;        // data loading instr
+    uint8_t mode = 0b0011;
+    uint8_t a = Instruction::GPR::PC;
+    uint8_t b = Instruction::GPR::SP;
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(inst, mode, a, b, 0, 0)
+    );
 }
