@@ -73,14 +73,17 @@ label:
   ;
   
 directive:
-    ASCII STRING { addAsciiDirective($2); free($2); }
+    ASCII STRING {  addAsciiDirective($2); location_counter += strlen($2); free($2); }
   | END { YYACCEPT; /* end parsing successfully */ }
   | EQU SYMBOL COMMA exp 
   | EXTERN symbol_list { declareSymbolsExtern($2); }
   | GLOBAL symbol_list { if (!allSymbolsDefined($2)) { YYERROR; } declareSymbolsGlobal($2); }
   | SECTION SYMBOL { startNewSection($2); }
-  | SKIP LITERAL { addSkipDirective($2); }
-  | WORD symbol_or_literal_list { addWordDirective($2); }
+  | SKIP LITERAL { addSkipDirective($2); location_counter += $2;}
+  | WORD symbol_or_literal_list { 
+      addWordDirective($2); 
+      for (int i = 0; $2[i] != NULL; i++) location_counter += 4;
+    }
   ;
 
 symbol_list:
