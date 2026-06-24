@@ -78,33 +78,33 @@ SYMBOL      ([a-z]|[A-Z]|[_.$])([a-z]|[A-Z]|[_.$]|[0-9])*
 
 %%
 
-{ADD}       return ADD;
-{AND}       return AND;
-{BEQ}       return BEQ;
-{BGT}       return BGT;
-{BNE}       return BNE;
-{CALL}      return CALL;
+{ADD}       { yylval.ival = ADD; return ADD; }
+{AND}       { yylval.ival = AND; return AND; }
+{BEQ}       { yylval.ival = BEQ; return BEQ; }
+{BGT}       { yylval.ival = BGT; return BGT; }
+{BNE}       { yylval.ival = BNE; return BNE; }
+{CALL}      { yylval.ival = CALL; return CALL; }
 {CSRRD}     return CSRRD;
 {CSRWR}     return CSRWR;
-{DIV}       return DIV;
+{DIV}       { yylval.ival = DIV; return DIV; }
 {HALT}      { yylval.ival = HALT; return HALT; }
 {INT}       { yylval.ival = INT; return INT; }
 {IRET}      { yylval.ival = IRET; return IRET; }
-{JMP}       return JMP;
+{JMP}       { yylval.ival = JMP; return JMP; }
 {LD}        return LD;
-{MUL}       return MUL;
+{MUL}       { yylval.ival = MUL; return MUL; }
 {NOT}       { yylval.ival = NOT; return NOT; }
 {NL}        return NL;
-{OR}        return OR;
+{OR}        { yylval.ival = OR; return OR; }
 {POP}       { yylval.ival = POP; return POP; }
 {PUSH}      { yylval.ival = PUSH; return PUSH; }
 {RET}       { yylval.ival = RET; return RET; }
-{SHL}       return SHL;
-{SHR}       return SHR;
+{SHL}       { yylval.ival = SHL; return SHL; }
+{SHR}       { yylval.ival = SHR; return SHR; }
 {ST}        return ST;
-{SUB}       return SUB;
-{XCHNG}     return XCHNG;
-{XOR}       return XOR;
+{SUB}       { yylval.ival = SUB; return SUB; }
+{XCHNG}     { yylval.ival = XCHNG; return XCHNG; }
+{XOR}       { yylval.ival = XOR; return XOR; }
 {ASCII}     return ASCII;
 {END}       return END;
 {EQU}       return EQU;

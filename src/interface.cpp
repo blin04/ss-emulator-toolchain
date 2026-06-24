@@ -110,5 +110,60 @@ void oneOpStatementHandler(int stmt, int op) {
         case yytoken_kind_t::POP:
             Instruction::popHandler(op);
             break;
+        case yytoken_kind_t::JMP:
+            Instruction::jmpHandler(op);
+            break;
+        case yytoken_kind_t::CALL:
+            Instruction::callHandler(op);
+            break;
+    }
+}
+
+void twoOpStatementHandler(int stmt, int gpr1, int gpr2) {
+    switch (stmt) {
+        case yytoken_kind_t::ADD:
+            Instruction::addHandler(gpr1, gpr2);
+            break;
+        case yytoken_kind_t::SUB:
+            Instruction::subHandler(gpr1, gpr2);
+            break;
+        case yytoken_kind_t::MUL:
+            Instruction::mulHandler(gpr1, gpr2);
+            break;
+        case yytoken_kind_t::DIV:
+            Instruction::divHandler(gpr1, gpr2);
+            break;
+        case yytoken_kind_t::AND:
+            Instruction::andHandler(gpr1, gpr2);
+            break;
+        case yytoken_kind_t::OR:
+            Instruction::orHandler(gpr1, gpr2);
+            break;
+        case yytoken_kind_t::XOR:
+            Instruction::xorHandler(gpr1, gpr2);
+            break;
+        case yytoken_kind_t::SHL:
+            Instruction::shlHandler(gpr1, gpr2);
+            break;
+        case yytoken_kind_t::SHR:
+            Instruction::shrHandler(gpr1, gpr2);
+            break;
+        case yytoken_kind_t::XCHNG:
+            Instruction::xchngHandler(gpr1, gpr2);
+            break;
+    }
+}
+
+void threeOpStatementHandler(int stmt, int gpr1, int gpr2, int op) {
+    switch (stmt) {
+        case yytoken_kind_t::BEQ:
+            Instruction::beqHandler(gpr1, gpr2, op);
+            break;
+        case yytoken_kind_t::BNE:
+            Instruction::beqHandler(gpr1, gpr2, op);
+            break;
+        case yytoken_kind_t::BGT:
+            Instruction::beqHandler(gpr1, gpr2, op);
+            break;
     }
 }

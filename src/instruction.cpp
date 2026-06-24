@@ -79,9 +79,89 @@ void Instruction::popHandler(int op) {
 }
 
 void Instruction::callHandler(int op) {
-
+    // push pc, pc <= op
+    // todo: raise error if op > 12b
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(0b0010, 0, 0, 0, 0, op)
+    );
 }
 
 void Instruction::jmpHandler(int op) {
+    // pc <= op
+    // todo: raise error if op > 12b
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(0b0011, 0, 0, 0, 0, op)
+    );
+}
 
+void Instruction::beqHandler(int gpr1, int gpr2, int op) {
+    // if (gpr1 == gpr2) pc <= operand
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(0b0011, 1, 0, gpr1, gpr2, op)
+    );
+}
+
+void Instruction::bneHandler(int gpr1, int gpr2, int op) {
+    // if (gpr1 == gpr2) pc <= operand
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(0b0011, 2, 0, gpr1, gpr2, op)
+    );
+}
+
+void Instruction::bgtHandler(int gpr1, int gpr2, int op) {
+    // if (gpr1 == gpr2) pc <= operand
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(0b0011, 3, 0, gpr1, gpr2, op)
+    );
+}
+
+void Instruction::xchngHandler(int gpr1, int gpr2) {
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(0b0100, 0, 0, gpr1, gpr2, 0)        
+    );
+}
+void Instruction::addHandler(int gpr1, int gpr2) {
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(0b0101, 0, gpr1, gpr1, gpr2, 0)        
+    );
+}
+void Instruction::subHandler(int gpr1, int gpr2) {
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(0b0101, 1, gpr1, gpr1, gpr2, 0)        
+    );
+}
+void Instruction::mulHandler(int gpr1, int gpr2) {
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(0b0101, 2, gpr1, gpr1, gpr2, 0)        
+    );
+}
+void Instruction::divHandler(int gpr1, int gpr2) {
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(0b0101, 3, gpr1, gpr1, gpr2, 0)        
+    );
+}
+void Instruction::andHandler(int gpr1, int gpr2) {
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(0b0110, 1, gpr1, gpr1, gpr2, 0)        
+    );
+}
+void Instruction::orHandler(int gpr1, int gpr2) {
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(0b0110, 2, gpr1, gpr1, gpr2, 0)        
+    );
+}
+void Instruction::xorHandler(int gpr1, int gpr2) {
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(0b0110, 3, gpr1, gpr1, gpr2, 0)        
+    );
+}
+void Instruction::shlHandler(int gpr1, int gpr2) {
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(0b0111, 0, gpr1, gpr1, gpr2, 0)        
+    );
+}
+void Instruction::shrHandler(int gpr1, int gpr2) {
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(0b0111, 1, gpr1, gpr1, gpr2, 0)        
+    );
 }

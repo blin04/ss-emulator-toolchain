@@ -73,6 +73,7 @@
 %type <ival> zero_op_stmt;
 %type <ival> data_one_op_stmt;
 %type <ival> jmp_one_op_stmt;
+%type <ival> three_op_stmt
 %type <ival> jump_operand;
 %type <ival> gpr;
 // %type <instval> two_op_instr;
@@ -185,8 +186,8 @@ symbol_or_literal_list:
 statement: 
     zero_op_stmt { zeroOpStatementHandler($1); }
   | one_op_stmt
-  | two_op_stmt gpr COMMA gpr
-  | three_op_stmt gpr COMMA gpr COMMA jump_operand
+  | two_op_stmt gpr COMMA gpr {}
+  | three_op_stmt gpr COMMA gpr COMMA jump_operand { threeOpStatementHandler($1, $2, $4, $6); }
   | LD data_operand COMMA gpr
   | ST gpr COMMA data_operand
   | CSRRD csr COMMA gpr

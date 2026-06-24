@@ -46,19 +46,20 @@ public:
     static void callHandler(int op);
     static void jmpHandler(int op);
 
-    static void beqHandler();
-    static void bneHandler();
-    static void bgtHandler();
-    static void xchgHandler();
-    static void addHandler();
-    static void subHandler();
-    static void mulHandler();
-    static void divHandler();
-    static void andHandler();
-    static void orHandler();
-    static void xorHandler();
-    static void shlHandler();
-    static void shrHandler();
+    static void beqHandler(int gpr1, int gpr2, int op);
+    static void bneHandler(int gpr1, int gpr2, int op);
+    static void bgtHandler(int gpr1, int gpr2, int op);
+
+    static void xchngHandler(int gpr1, int gpr2);
+    static void addHandler(int gpr1, int gpr2);
+    static void subHandler(int gpr1, int gpr2);
+    static void mulHandler(int gpr1, int gpr2);
+    static void divHandler(int gpr1, int gpr2);
+    static void andHandler(int gpr1, int gpr2);
+    static void orHandler(int gpr1, int gpr2);
+    static void xorHandler(int gpr1, int gpr2);
+    static void shlHandler(int gpr1, int gpr2);
+    static void shrHandler(int gpr1, int gpr2);
     static void ldHandler();
     static void stHandler();
     static void csrrdHandler();

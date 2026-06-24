@@ -26,6 +26,7 @@ void startNewSection(const char* name, int offset);
 
 void zeroOpStatementHandler(int stmt);
 void oneOpStatementHandler(int stmt, int op);
-void twoOpStatementHandler(int stmt, int op);
+void twoOpStatementHandler(int stmt, int gpr1, int gpr2);
+void threeOpStatementHandler(int stmt, int gpr1, int gpr2, int op);
 
 #endif
