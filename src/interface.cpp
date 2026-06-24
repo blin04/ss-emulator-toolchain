@@ -10,7 +10,6 @@
 #include "../misc/parser.tab.h"
 
 void defineSymbol(const char* name, int value, bool equ_defined) {
-    // section id is 0 for now
     std::cout << "defined " << name << " with value " << value << "\n";
     ObjectFile::getSymbolTable()->defineSymbol(
         name, 
@@ -170,6 +169,17 @@ void threeOpStatementHandler(int stmt, int gpr1, int gpr2, int op) {
             break;
         case yytoken_kind_t::BGT:
             Instruction::beqHandler(gpr1, gpr2, op);
+            break;
+    }
+}
+
+void memoryStatementHandler(int type, DataOperand operand, int gpr) {
+    switch (type) {
+        case yytoken_kind_t::LD:
+            Instruction::ldHandler(operand.fromMemory, operand.gpr, operand.disp, gpr);
+            break;
+        case yytoken_kind_t::ST:
+            Instruction::stHandler(operand.fromMemory, operand.gpr, operand.disp, gpr);
             break;
     }
 }

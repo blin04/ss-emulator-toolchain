@@ -46,7 +46,13 @@ void SymbolTable::declareSymbolGlobal(std::string name) {
 
 void SymbolTable::declareSymbolExtern(std::string name) { defineSymbol(name, 0, 0, SYMB_UND); }
 
-int SymbolTable::getSymbolValue(std::string symbol) { return symbols[symbol]->offset; }
+int SymbolTable::getSymbolValue(std::string symbol) { 
+    // if there is a request to get the value
+    // of a symbol that still hasn't been defined,
+    // then 0 should be returned and a relocation 
+    // entry must be generated
+    return symbols[symbol]->offset; 
+}
 
 void SymbolTable::print() {
     std::cout << "\tName | Section ID | Offset | Type\n";

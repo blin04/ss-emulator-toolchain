@@ -9,6 +9,12 @@
 
 // Types
 
+typedef struct operand {
+    bool fromMemory;
+    int gpr;
+    int disp;
+} DataOperand;
+
 // Functions
 
 void addDirective();
@@ -28,5 +34,7 @@ void zeroOpStatementHandler(int stmt);
 void oneOpStatementHandler(int stmt, int op);
 void twoOpStatementHandler(int stmt, int gpr1, int gpr2);
 void threeOpStatementHandler(int stmt, int gpr1, int gpr2, int op);
+
+void memoryStatementHandler(int type, DataOperand op, int gpr);
 
 #endif

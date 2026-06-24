@@ -1,3 +1,7 @@
+%code requires {
+  #include "../inc/interface.h"
+}
+
 %{
   #include <stdio.h>
   #include <string.h>
@@ -46,7 +50,7 @@
   int ival;
   char* sval;
   char** arrval;      // null-terminated array of pointers to symbols
-//  Statement stmtval;
+  DataOperand oprval;
 }
 
 /* declaring used tokens */
@@ -78,7 +82,7 @@
 %type <ival> jump_operand;
 %type <ival> gpr;
 %type <ival> csr;
-// %type <instval> two_op_instr;
+%type <oprval> data_operand
 
 %%
 
@@ -190,8 +194,8 @@ statement:
   | one_op_stmt
   | two_op_stmt gpr COMMA gpr { twoOpStatementHandler($1, $2, $4); }
   | three_op_stmt gpr COMMA gpr COMMA jump_operand { threeOpStatementHandler($1, $2, $4, $6); }
-  | LD data_operand COMMA gpr
-  | ST gpr COMMA data_operand
+  | LD data_operand COMMA gpr { memoryStatementHandler($1, $2, $4); }
+  | ST gpr COMMA data_operand { memoryStatementHandler($1, $4, $2); }
   | CSRRD csr COMMA gpr { twoOpStatementHandler($1, $2, $4); }
   | CSRWR gpr COMMA csr { twoOpStatementHandler($1, $2, $4); }
   ;
@@ -244,14 +248,14 @@ jump_operand:
   ;
 
 data_operand:
-    DOLLAR LITERAL
-  | DOLLAR SYMBOL
-  | LITERAL
-  | SYMBOL
-  | gpr
-  | LPAR gpr RPAR
-  | LPAR gpr PLUS LITERAL RPAR
-  | LPAR gpr PLUS SYMBOL RPAR
+    DOLLAR LITERAL { $$.fromMemory = false; $$.gpr = 0; $$.disp = $2; }
+  | DOLLAR SYMBOL { $$.fromMemory = false, $$.gpr = 0; $$.disp = getSymbolValue($2); }
+  | LITERAL { $$.fromMemory = true; $$.gpr = 0; $$.disp = $1; }
+  | SYMBOL { $$.fromMemory = true; $$.gpr = 0; $$.disp = getSymbolValue($1); }
+  | gpr { $$.fromMemory = false; $$.gpr = $1; $$.disp = 0; }
+  | LPAR gpr RPAR { $$.fromMemory = true; $$.gpr = $2; $$.disp = 0; }
+  | LPAR gpr PLUS LITERAL RPAR { $$.fromMemory = true; $$.gpr = $2; $$.disp = $4; }
+  | LPAR gpr PLUS SYMBOL RPAR { $$.fromMemory = true; $$.gpr = $2; $$.disp = getSymbolValue($4); }
 
 exp:
     exp PLUS exp {$$ = $1 + $3; }

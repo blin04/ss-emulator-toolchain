@@ -61,8 +61,8 @@ public:
     static void shlHandler(int gpr1, int gpr2);
     static void shrHandler(int gpr1, int gpr2);
 
-    static void ldHandler();
-    static void stHandler();
+    static void ldHandler(bool fromMemory, int gprBase, int disp, int gprSource);
+    static void stHandler(bool fromMemory, int gprBase, int disp, int gprSource);
 
     static void csrrdHandler(int csr, int gpr);
     static void csrwrHandler(int gpr, int csr);

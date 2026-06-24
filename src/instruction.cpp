@@ -186,3 +186,34 @@ void Instruction::csrwrHandler(int gpr, int csr) {
         new Instruction(0b1001, 0b0100, csr, gpr, 0, 0)        
     );
 }
+
+void Instruction::ldHandler(bool fromMemory, int gprBase, int disp, int gprDest) {
+    uint8_t mode;
+    if (fromMemory) mode = 0b0010;
+    else mode = 0b0001; 
+
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(0b1001, mode, gprDest, gprBase, 0, disp)        
+    );
+}
+
+// ST makes no sense with $literal
+void Instruction::stHandler(bool fromMemory, int gprBase, int disp, int gprSource) {
+    if (fromMemory) {
+        // literal, simbol      - D
+        // [%<reg>]             - gpr
+        // [%<reg> + literal/simbol]    - gpr + D
+        // 1000 0000 gprBase 0 gprSource disp      // mem32[gprBase + disp] <= gpr[grpSource]
+        ObjectFile::getCurrentSection()->addLine(
+            new Instruction(0b1000, 0, gprBase, 0, gprSource, disp)
+        );
+    }
+    else {
+        // $literal, $simbol
+        // %<reg>
+        // 1001 0001 gprBase gprSource 0 disp  // gpr[A] <= gpr[B] + D
+        ObjectFile::getCurrentSection()->addLine(
+            new Instruction(0b1001, 1, gprBase, gprSource, 0, disp)
+        );
+    }
+}

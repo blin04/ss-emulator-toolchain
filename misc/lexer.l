@@ -91,7 +91,7 @@ SYMBOL      ([a-z]|[A-Z]|[_.$])([a-z]|[A-Z]|[_.$]|[0-9])*
 {INT}       { yylval.ival = INT; return INT; }
 {IRET}      { yylval.ival = IRET; return IRET; }
 {JMP}       { yylval.ival = JMP; return JMP; }
-{LD}        return LD;
+{LD}        { yylval.ival = LD; return LD; }
 {MUL}       { yylval.ival = MUL; return MUL; }
 {NOT}       { yylval.ival = NOT; return NOT; }
 {NL}        return NL;
@@ -101,7 +101,7 @@ SYMBOL      ([a-z]|[A-Z]|[_.$])([a-z]|[A-Z]|[_.$]|[0-9])*
 {RET}       { yylval.ival = RET; return RET; }
 {SHL}       { yylval.ival = SHL; return SHL; }
 {SHR}       { yylval.ival = SHR; return SHR; }
-{ST}        return ST;
+{ST}        { yylval.ival = ST; return ST; }
 {SUB}       { yylval.ival = SUB; return SUB; }
 {XCHNG}     { yylval.ival = XCHNG; return XCHNG; }
 {XOR}       { yylval.ival = XOR; return XOR; }
