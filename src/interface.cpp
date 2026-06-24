@@ -119,37 +119,43 @@ void oneOpStatementHandler(int stmt, int op) {
     }
 }
 
-void twoOpStatementHandler(int stmt, int gpr1, int gpr2) {
+void twoOpStatementHandler(int stmt, int op1, int op2) {
     switch (stmt) {
         case yytoken_kind_t::ADD:
-            Instruction::addHandler(gpr1, gpr2);
+            Instruction::addHandler(op1, op2);
             break;
         case yytoken_kind_t::SUB:
-            Instruction::subHandler(gpr1, gpr2);
+            Instruction::subHandler(op1, op2);
             break;
         case yytoken_kind_t::MUL:
-            Instruction::mulHandler(gpr1, gpr2);
+            Instruction::mulHandler(op1, op2);
             break;
         case yytoken_kind_t::DIV:
-            Instruction::divHandler(gpr1, gpr2);
+            Instruction::divHandler(op1, op2);
             break;
         case yytoken_kind_t::AND:
-            Instruction::andHandler(gpr1, gpr2);
+            Instruction::andHandler(op1, op2);
             break;
         case yytoken_kind_t::OR:
-            Instruction::orHandler(gpr1, gpr2);
+            Instruction::orHandler(op1, op2);
             break;
         case yytoken_kind_t::XOR:
-            Instruction::xorHandler(gpr1, gpr2);
+            Instruction::xorHandler(op1, op2);
             break;
         case yytoken_kind_t::SHL:
-            Instruction::shlHandler(gpr1, gpr2);
+            Instruction::shlHandler(op1, op2);
             break;
         case yytoken_kind_t::SHR:
-            Instruction::shrHandler(gpr1, gpr2);
+            Instruction::shrHandler(op1, op2);
             break;
         case yytoken_kind_t::XCHNG:
-            Instruction::xchngHandler(gpr1, gpr2);
+            Instruction::xchngHandler(op1, op2);
+            break;
+        case yytoken_kind_t::CSRRD:
+            Instruction::csrrdHandler(op1, op2);
+            break;
+        case yytoken_kind_t::CSRWR:
+            Instruction::csrwrHandler(op1, op2);
             break;
     }
 }

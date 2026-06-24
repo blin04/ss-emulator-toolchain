@@ -60,10 +60,12 @@ public:
     static void xorHandler(int gpr1, int gpr2);
     static void shlHandler(int gpr1, int gpr2);
     static void shrHandler(int gpr1, int gpr2);
+
     static void ldHandler();
     static void stHandler();
-    static void csrrdHandler();
-    static void csrwrHandler();
+
+    static void csrrdHandler(int csr, int gpr);
+    static void csrwrHandler(int gpr, int csr);
 
 private:
     uint8_t b1;

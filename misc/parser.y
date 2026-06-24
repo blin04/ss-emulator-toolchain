@@ -73,9 +73,11 @@
 %type <ival> zero_op_stmt;
 %type <ival> data_one_op_stmt;
 %type <ival> jmp_one_op_stmt;
+%type <ival> two_op_stmt;
 %type <ival> three_op_stmt
 %type <ival> jump_operand;
 %type <ival> gpr;
+%type <ival> csr;
 // %type <instval> two_op_instr;
 
 %%
@@ -186,12 +188,12 @@ symbol_or_literal_list:
 statement: 
     zero_op_stmt { zeroOpStatementHandler($1); }
   | one_op_stmt
-  | two_op_stmt gpr COMMA gpr {}
+  | two_op_stmt gpr COMMA gpr { twoOpStatementHandler($1, $2, $4); }
   | three_op_stmt gpr COMMA gpr COMMA jump_operand { threeOpStatementHandler($1, $2, $4, $6); }
   | LD data_operand COMMA gpr
   | ST gpr COMMA data_operand
-  | CSRRD csr COMMA gpr
-  | CSRWR gpr COMMA csr
+  | CSRRD csr COMMA gpr { twoOpStatementHandler($1, $2, $4); }
+  | CSRWR gpr COMMA csr { twoOpStatementHandler($1, $2, $4); }
   ;
 
 zero_op_stmt: 
@@ -257,16 +259,20 @@ exp:
   | SYMBOL { $$ = getSymbolValue($1); }
   | LITERAL { $$ = $1; }
 
+
+// for csr and gpr index of the used register
+// (per CPU architecture) is returned
+
 gpr:
     REG
   | SP { $$ = 14; }
   | PC { $$ = 15; }
   ;
 
-csr:
-    HANDLER
-  | STATUS
-  | CAUSE
+csr:    
+    HANDLER { $$ = 1; }   
+  | STATUS { $$ = 0; }
+  | CAUSE { $$ = 2; }
   ;
 
 %%

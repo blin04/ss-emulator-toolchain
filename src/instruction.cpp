@@ -120,48 +120,69 @@ void Instruction::xchngHandler(int gpr1, int gpr2) {
         new Instruction(0b0100, 0, 0, gpr1, gpr2, 0)        
     );
 }
+
 void Instruction::addHandler(int gpr1, int gpr2) {
     ObjectFile::getCurrentSection()->addLine(
         new Instruction(0b0101, 0, gpr1, gpr1, gpr2, 0)        
     );
 }
+
 void Instruction::subHandler(int gpr1, int gpr2) {
     ObjectFile::getCurrentSection()->addLine(
         new Instruction(0b0101, 1, gpr1, gpr1, gpr2, 0)        
     );
 }
+
 void Instruction::mulHandler(int gpr1, int gpr2) {
     ObjectFile::getCurrentSection()->addLine(
         new Instruction(0b0101, 2, gpr1, gpr1, gpr2, 0)        
     );
 }
+
 void Instruction::divHandler(int gpr1, int gpr2) {
     ObjectFile::getCurrentSection()->addLine(
         new Instruction(0b0101, 3, gpr1, gpr1, gpr2, 0)        
     );
 }
+
 void Instruction::andHandler(int gpr1, int gpr2) {
     ObjectFile::getCurrentSection()->addLine(
         new Instruction(0b0110, 1, gpr1, gpr1, gpr2, 0)        
     );
 }
+
 void Instruction::orHandler(int gpr1, int gpr2) {
     ObjectFile::getCurrentSection()->addLine(
         new Instruction(0b0110, 2, gpr1, gpr1, gpr2, 0)        
     );
 }
+
 void Instruction::xorHandler(int gpr1, int gpr2) {
     ObjectFile::getCurrentSection()->addLine(
         new Instruction(0b0110, 3, gpr1, gpr1, gpr2, 0)        
     );
 }
+
 void Instruction::shlHandler(int gpr1, int gpr2) {
     ObjectFile::getCurrentSection()->addLine(
         new Instruction(0b0111, 0, gpr1, gpr1, gpr2, 0)        
     );
 }
+
 void Instruction::shrHandler(int gpr1, int gpr2) {
     ObjectFile::getCurrentSection()->addLine(
         new Instruction(0b0111, 1, gpr1, gpr1, gpr2, 0)        
+    );
+}
+
+void Instruction::csrrdHandler(int csr, int gpr) {
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(0b1001, 0, gpr, csr, 0, 0)        
+    );
+}
+
+void Instruction::csrwrHandler(int gpr, int csr) {
+    ObjectFile::getCurrentSection()->addLine(
+        new Instruction(0b1001, 0b0100, csr, gpr, 0, 0)        
     );
 }

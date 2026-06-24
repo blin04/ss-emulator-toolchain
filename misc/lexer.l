@@ -84,8 +84,8 @@ SYMBOL      ([a-z]|[A-Z]|[_.$])([a-z]|[A-Z]|[_.$]|[0-9])*
 {BGT}       { yylval.ival = BGT; return BGT; }
 {BNE}       { yylval.ival = BNE; return BNE; }
 {CALL}      { yylval.ival = CALL; return CALL; }
-{CSRRD}     return CSRRD;
-{CSRWR}     return CSRWR;
+{CSRRD}     { yylval.ival = CSRRD; return CSRRD; }
+{CSRWR}     { yylval.ival = CSRWR; return CSRWR; }
 {DIV}       { yylval.ival = DIV; return DIV; }
 {HALT}      { yylval.ival = HALT; return HALT; }
 {INT}       { yylval.ival = INT; return INT; }
