@@ -39,14 +39,14 @@ XOR         xor
 
 /* directives */ 
 
-ASCII       .ascii
-END         .end
-EQU         .equ
-EXTERN      .extern
-GLOBAL      .global
-SECTION     .section
-SKIP        .skip
-WORD        .word
+ASCII       \.ascii
+END         \.end
+EQU         \.equ
+EXTERN      \.extern
+GLOBAL      \.global
+SECTION     \.section
+SKIP        \.skip
+WORD        \.word
 
 /* registers */ 
 
@@ -108,7 +108,7 @@ SYMBOL      ([a-z]|[A-Z]|[_.$])([a-z]|[A-Z]|[_.$]|[0-9])*
 {ASCII}     return ASCII;
 {END}       return END;
 {EQU}       return EQU;
-{EXTERN}    return EXTERN;
+{EXTERN}    {printf("got extern\n"); return EXTERN; }
 {GLOBAL}    return GLOBAL;
 {SECTION}   return SECTION;
 {SKIP}      return SKIP;
