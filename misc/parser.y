@@ -97,13 +97,20 @@ line:
     /* empty */
   | directive comment { location_counter += $1; }
   | statement comment { location_counter += 4; }
-  | label comment { defineSymbol($1, location_counter); }
+  | label comment { 
+      if (externSymbol($1)) YYERROR;
+      defineSymbol($1, location_counter); 
+    }
   | label directive comment { 
       if (externSymbol($1)) YYERROR;
       defineSymbol($1, location_counter); 
       location_counter += $2; 
     }
-  | label statement comment { defineSymbol($1, location_counter); location_counter += 4; }
+  | label statement comment { 
+      if (externSymbol($1)) YYERROR;
+      defineSymbol($1, location_counter); 
+      location_counter += 4; 
+    }
   | COMMENT
   ;
 

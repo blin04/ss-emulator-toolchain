@@ -10,6 +10,9 @@ OUTPUT = build/asembler
 asembler: $(ASM_SOURCES)
 	g++ -I misc -I inc $(ASM_SOURCES) -o $(OUTPUT)
 
+asembler-debug: $(ASM_SOURCES)
+	g++ -g -I misc -I inc $(ASM_SOURCES) -o $(OUTPUT)
+
 lexer: $(LEXER_SRC)
 
 $(LEXER_SRC): misc/lexer.l
