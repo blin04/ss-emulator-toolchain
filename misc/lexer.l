@@ -74,7 +74,7 @@ OCT_INT     0[0-7]*
 PLUS        \+
 RPAR        \]
 STRING      \".*\"
-SYMBOL      ([a-z]|[A-Z]|[_.$])([a-z]|[A-Z]|[_.$]|[0-9])*
+SYMBOL      ([a-z]|[A-Z]|[_.])([a-z]|[A-Z]|[_.$]|[0-9])*
 
 %%
 
@@ -108,7 +108,7 @@ SYMBOL      ([a-z]|[A-Z]|[_.$])([a-z]|[A-Z]|[_.$]|[0-9])*
 {ASCII}     return ASCII;
 {END}       return END;
 {EQU}       return EQU;
-{EXTERN}    {printf("got extern\n"); return EXTERN; }
+{EXTERN}    return EXTERN;
 {GLOBAL}    return GLOBAL;
 {SECTION}   return SECTION;
 {SKIP}      return SKIP;

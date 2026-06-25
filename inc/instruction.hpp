@@ -8,6 +8,9 @@ public:
     Instruction(uint8_t oc, uint8_t mod, uint8_t regA, uint8_t regB, uint8_t regC, int disp);
     std::vector<uint8_t> generateBytes();
 
+    // todo: should be made global so that
+    // the parser can also access them 
+    // and pass them through the interface
     enum GPR : uint8_t {
         R0 = 0,
         R1,
@@ -34,6 +37,9 @@ public:
         handler,
         cause
     };
+
+    // todo: add functions for corrections 
+    // depending on displacement values
 
     static void haltHandler();
     static void intHandler();

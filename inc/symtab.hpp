@@ -9,7 +9,7 @@ public:
     enum SymbolType {
         SYMB_GLOB,
         SYMB_LOC,
-        SYMB_UND,      // extern
+        SYMB_UND,       // extern
         SYMB_ABS        // .equ defined
     };
 
@@ -31,9 +31,12 @@ private:
         int         section;
         int         offset;
         SymbolType  type;
+        bool        defined;        // says if the symbol's value is known
     } Entry;
 
     std::map<std::string, Entry*> symbols;
+
+    void addEntry(std::string name, int section, int offset, SymbolType type, bool defined);
 };
 
 #endif

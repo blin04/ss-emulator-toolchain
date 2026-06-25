@@ -50,7 +50,7 @@
   int ival;
   char* sval;
   char** arrval;      // null-terminated array of pointers to symbols
-  DataOperand oprval;
+  Operand oprval;
 }
 
 /* declaring used tokens */
@@ -79,9 +79,9 @@
 %type <ival> jmp_one_op_stmt;
 %type <ival> two_op_stmt;
 %type <ival> three_op_stmt
-%type <ival> jump_operand;
 %type <ival> gpr;
 %type <ival> csr;
+%type <oprval> jump_operand;
 %type <oprval> data_operand
 
 %%
@@ -216,7 +216,7 @@ zero_op_stmt:
 
 one_op_stmt: 
     data_one_op_stmt gpr { oneOpStatementHandler($1, $2); }
-  | jmp_one_op_stmt jump_operand { oneOpStatementHandler($1, $2); }
+  | jmp_one_op_stmt jump_operand { oneOpJumpStatementHandler($1, $2); }
   ;
 
 two_op_stmt:
@@ -250,19 +250,68 @@ jmp_one_op_stmt:
   ;
 
 jump_operand:
-    LITERAL 
-  | SYMBOL { $$ = getSymbolValue($1); }
+    LITERAL {
+      $$.fromMemory = false;
+      $$.gpr = 0;
+      $$.disp = $1; 
+    }
+  | SYMBOL { 
+      $$.fromMemory = false;
+      $$.gpr = 0;
+      $$.disp = getSymbolValue($1); 
+      $$.defined = isDefined($1);
+    }
   ;
 
 data_operand:
-    DOLLAR LITERAL { $$.fromMemory = false; $$.gpr = 0; $$.disp = $2; }
-  | DOLLAR SYMBOL { $$.fromMemory = false, $$.gpr = 0; $$.disp = getSymbolValue($2); }
-  | LITERAL { $$.fromMemory = true; $$.gpr = 0; $$.disp = $1; }
-  | SYMBOL { $$.fromMemory = true; $$.gpr = 0; $$.disp = getSymbolValue($1); }
-  | gpr { $$.fromMemory = false; $$.gpr = $1; $$.disp = 0; }
-  | LPAR gpr RPAR { $$.fromMemory = true; $$.gpr = $2; $$.disp = 0; }
-  | LPAR gpr PLUS LITERAL RPAR { $$.fromMemory = true; $$.gpr = $2; $$.disp = $4; }
-  | LPAR gpr PLUS SYMBOL RPAR { $$.fromMemory = true; $$.gpr = $2; $$.disp = getSymbolValue($4); }
+    DOLLAR LITERAL { 
+      $$.fromMemory = false; 
+      $$.gpr = 0; 
+      $$.disp = $2; 
+      $$.defined = true;
+    }
+  | DOLLAR SYMBOL { 
+      $$.fromMemory = false, 
+      $$.gpr = 0; 
+      $$.disp = getSymbolValue($2); 
+      $$.defined = isDefined($2);
+    }
+  | LITERAL { 
+      $$.fromMemory = true; 
+      $$.gpr = 0; 
+      $$.disp = $1; 
+      $$.defined = true;
+    }
+  | SYMBOL { 
+      $$.fromMemory = true; 
+      $$.gpr = 0; 
+      $$.disp = getSymbolValue($1); 
+      $$.defined = isDefined($1);
+    }
+  | gpr { 
+      $$.fromMemory = false; 
+      $$.gpr = $1; 
+      $$.disp = 0; 
+      $$.defined = true;
+    }
+  | LPAR gpr RPAR { 
+      $$.fromMemory = true; 
+      $$.gpr = $2; 
+      $$.disp = 0; 
+      $$.defined = true;
+    }
+  | LPAR gpr PLUS LITERAL RPAR { 
+      $$.fromMemory = true; 
+      $$.gpr = $2; 
+      $$.disp = $4; 
+      $$.defined = true;
+    }
+  | LPAR gpr PLUS SYMBOL RPAR { 
+      $$.fromMemory = true; 
+      $$.gpr = $2; 
+      $$.disp = getSymbolValue($4); 
+      $$.defined = isDefined($4);
+    }
 
 exp:
     exp PLUS exp {$$ = $1 + $3; }

@@ -13,7 +13,8 @@ typedef struct operand {
     bool fromMemory;
     int gpr;
     int disp;
-} DataOperand;
+    bool defined;
+} Operand;
 
 // Functions
 
@@ -32,9 +33,10 @@ void startNewSection(const char* name, int offset);
 
 void zeroOpStatementHandler(int stmt);
 void oneOpStatementHandler(int stmt, int op);
+void oneOpJumpStatementHandler(int stmt, Operand op);
 void twoOpStatementHandler(int stmt, int gpr1, int gpr2);
-void threeOpStatementHandler(int stmt, int gpr1, int gpr2, int op);
+void threeOpStatementHandler(int stmt, int gpr1, int gpr2, Operand op);
 
-void memoryStatementHandler(int type, DataOperand op, int gpr);
+void memoryStatementHandler(int type, Operand op, int gpr);
 
 #endif

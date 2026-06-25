@@ -9,8 +9,8 @@
 #include "../inc/symtab.hpp"
 #include "../misc/parser.tab.h"
 
+// defines symbol with a particular value
 void defineSymbol(const char* name, int value, bool equ_defined) {
-    std::cout << "defined " << name << " with value " << value << "\n";
     ObjectFile::getSymbolTable()->defineSymbol(
         name, 
         ObjectFile::getCurrentSection()->getSectionID(), 
@@ -109,12 +109,27 @@ void oneOpStatementHandler(int stmt, int op) {
         case yytoken_kind_t::POP:
             Instruction::popHandler(op);
             break;
+    }
+}
+
+void oneOpJumpStatementHandler(int stmt, Operand op) {
+    switch (stmt) {
         case yytoken_kind_t::JMP:
-            Instruction::jmpHandler(op);
+            Instruction::jmpHandler(op.disp);
             break;
         case yytoken_kind_t::CALL:
-            Instruction::callHandler(op);
+            Instruction::callHandler(op.disp);
             break;
+    }
+
+    if (!op.defined) {
+        // add entry to forward reference table
+        std::cout << "adding entry to FREFTAB\n";
+    }
+    else {
+        // check if the disp can fit into 12b
+        // if not, correct the instruction 
+        // and add entry to literal pool
     }
 }
 
@@ -159,27 +174,47 @@ void twoOpStatementHandler(int stmt, int op1, int op2) {
     }
 }
 
-void threeOpStatementHandler(int stmt, int gpr1, int gpr2, int op) {
+void threeOpStatementHandler(int stmt, int gpr1, int gpr2, Operand op) {
     switch (stmt) {
         case yytoken_kind_t::BEQ:
-            Instruction::beqHandler(gpr1, gpr2, op);
+            Instruction::beqHandler(gpr1, gpr2, op.disp);
             break;
         case yytoken_kind_t::BNE:
-            Instruction::beqHandler(gpr1, gpr2, op);
+            Instruction::beqHandler(gpr1, gpr2, op.disp);
             break;
         case yytoken_kind_t::BGT:
-            Instruction::beqHandler(gpr1, gpr2, op);
+            Instruction::beqHandler(gpr1, gpr2, op.disp);
             break;
+    }
+
+    if (!op.defined) {
+        // add entry to forward reference table
+        std::cout << "adding entry to FREFTAB\n";
+    }
+    else {
+        // check if the disp can fit into 12b
+        // if not, correct the instruction 
+        // and add entry to literal pool
     }
 }
 
-void memoryStatementHandler(int type, DataOperand operand, int gpr) {
+void memoryStatementHandler(int type, Operand op, int gpr) {
     switch (type) {
         case yytoken_kind_t::LD:
-            Instruction::ldHandler(operand.fromMemory, operand.gpr, operand.disp, gpr);
+            Instruction::ldHandler(op.fromMemory, op.gpr, op.disp, gpr);
             break;
         case yytoken_kind_t::ST:
-            Instruction::stHandler(operand.fromMemory, operand.gpr, operand.disp, gpr);
+            Instruction::stHandler(op.fromMemory, op.gpr, op.disp, gpr);
             break;
+    }
+
+    if (!op.defined) {
+        // add entry to forward reference table
+        std::cout << "adding entry to FREFTAB\n";
+    }
+    else {
+        // check if the disp can fit into 12b
+        // if not, correct the instruction 
+        // and add entry to literal pool
     }
 }
