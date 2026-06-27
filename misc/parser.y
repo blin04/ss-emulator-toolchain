@@ -301,12 +301,26 @@ data_operand:
       $$.defined = true;
     }
   | LPAR gpr PLUS LITERAL RPAR { 
+      // 12b signed values are [-2^11, 2^11 - 1]
+      if ($4 >= (1 << 11) || $4 < -(1 << 11)) {
+        yyerror("literal value too large: displacement for base register addressing must fit as a signed value in 12b");
+        YYERROR;
+      }
+
       $$.fromMemory = true; 
       $$.gpr = $2; 
       $$.disp = $4; 
       $$.defined = true;
     }
   | LPAR gpr PLUS SYMBOL RPAR { 
+      if (isDefined($4) && 
+        (getSymbolValue($4) >= (1 << 11) || 
+        getSymbolValue($4) < -(1 << 11))) {
+
+        yyerror("symbol value too large: displacement for base register addressing must fit as a signed value in 12b");
+        YYERROR;
+      }
+
       $$.fromMemory = true; 
       $$.gpr = $2; 
       $$.disp = getSymbolValue($4); 
@@ -339,5 +353,7 @@ csr:
 
 void yyerror(const char* c) {
   printf("Parse error: %s\n", c);
-  printf("(token value %s, at line number %d) \n", yylval, line_num);
+
+  // causes seg fault for some reason: 
+  // printf("(token value %s, at line number %d) \n", yylval, line_num);
 }
