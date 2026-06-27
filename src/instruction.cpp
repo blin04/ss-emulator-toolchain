@@ -78,40 +78,51 @@ void Instruction::popHandler(int op) {
     );
 }
 
-void Instruction::callHandler(int op) {
+void Instruction::callHandler(int op, bool fromPool) {
     // push pc, pc <= op
-    // todo: raise error if op > 12b
+
+    // if operand is referenced from literal 
+    // pool PC relative addressing is used
+    uint8_t mode = fromPool ? 1 : 0;
+    uint8_t regA = fromPool ? 15 : 0;
     ObjectFile::getCurrentSection()->addLine(
-        new Instruction(0b0010, 0, 0, 0, 0, op)
+        new Instruction(0b0010, mode, regA, 0, 0, op)
     );
 }
 
-void Instruction::jmpHandler(int op) {
+void Instruction::jmpHandler(int op, bool fromPool) {
     // pc <= op
-    // todo: raise error if op > 12b
+    uint8_t mode = fromPool ? 8 : 0;
+    uint8_t regA = fromPool ? 15 : 0;
     ObjectFile::getCurrentSection()->addLine(
-        new Instruction(0b0011, 0, 0, 0, 0, op)
+        new Instruction(0b0011, mode, regA, 0, 0, op)
     );
 }
 
-void Instruction::beqHandler(int gpr1, int gpr2, int op) {
+void Instruction::beqHandler(int gpr1, int gpr2, int op, bool fromPool) {
     // if (gpr1 == gpr2) pc <= operand
+    uint8_t mode = fromPool ? 9 : 1;
+    uint8_t regA = fromPool ? 15 : 0;
     ObjectFile::getCurrentSection()->addLine(
-        new Instruction(0b0011, 1, 0, gpr1, gpr2, op)
+        new Instruction(0b0011, mode, regA, gpr1, gpr2, op)
     );
 }
 
-void Instruction::bneHandler(int gpr1, int gpr2, int op) {
+void Instruction::bneHandler(int gpr1, int gpr2, int op, bool fromPool) {
     // if (gpr1 == gpr2) pc <= operand
+    uint8_t mode = fromPool ? 10 : 2;
+    uint8_t regA = fromPool ? 15 : 0;
     ObjectFile::getCurrentSection()->addLine(
-        new Instruction(0b0011, 2, 0, gpr1, gpr2, op)
+        new Instruction(0b0011, mode, regA, gpr1, gpr2, op)
     );
 }
 
-void Instruction::bgtHandler(int gpr1, int gpr2, int op) {
+void Instruction::bgtHandler(int gpr1, int gpr2, int op, bool fromPool) {
     // if (gpr1 == gpr2) pc <= operand
+    uint8_t mode = fromPool ? 11 : 3;
+    uint8_t regA = fromPool ? 15 : 0;
     ObjectFile::getCurrentSection()->addLine(
-        new Instruction(0b0011, 3, 0, gpr1, gpr2, op)
+        new Instruction(0b0011, mode, regA, gpr1, gpr2, op)
     );
 }
 
@@ -187,7 +198,9 @@ void Instruction::csrwrHandler(int gpr, int csr) {
     );
 }
 
-void Instruction::ldHandler(bool fromMemory, int gprBase, int disp, int gprDest) {
+// todo: handle case when the operand used with LD and ST is referenced from literal pool 
+
+void Instruction::ldHandler(bool fromMemory, int gprBase, int disp, int gprDest, bool fromPool) {
     uint8_t mode;
     if (fromMemory) mode = 0b0010;
     else mode = 0b0001; 
@@ -198,7 +211,8 @@ void Instruction::ldHandler(bool fromMemory, int gprBase, int disp, int gprDest)
 }
 
 // ST makes no sense with $literal
-void Instruction::stHandler(bool fromMemory, int gprBase, int disp, int gprSource) {
+void Instruction::stHandler(bool fromMemory, int gprBase, int disp, int gprSource, bool fromPool) {
+    Instruction* inst; 
     if (fromMemory) {
         // literal, simbol      - D
         // [%<reg>]             - gpr
@@ -216,4 +230,5 @@ void Instruction::stHandler(bool fromMemory, int gprBase, int disp, int gprSourc
             new Instruction(0b1001, 1, gprBase, gprSource, 0, disp)
         );
     }
+    ObjectFile::getCurrentSection()->addLine(inst);
 }

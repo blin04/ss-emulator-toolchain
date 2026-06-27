@@ -41,6 +41,8 @@ public:
     // todo: add functions for corrections 
     // depending on displacement values
 
+    // Functions for instruction creation
+
     static void haltHandler();
     static void intHandler();
     static void iretHandler();
@@ -49,12 +51,13 @@ public:
     static void notHandler(int op);
     static void pushHandler(int op);
     static void popHandler(int op);
-    static void callHandler(int op);
-    static void jmpHandler(int op);
 
-    static void beqHandler(int gpr1, int gpr2, int op);
-    static void bneHandler(int gpr1, int gpr2, int op);
-    static void bgtHandler(int gpr1, int gpr2, int op);
+    static void callHandler(int op, bool fromPool);
+    static void jmpHandler(int op, bool fromPool);
+
+    static void beqHandler(int gpr1, int gpr2, int op, bool fromPool);
+    static void bneHandler(int gpr1, int gpr2, int op, bool fromPool);
+    static void bgtHandler(int gpr1, int gpr2, int op, bool fromPool);
 
     static void xchngHandler(int gpr1, int gpr2);
     static void addHandler(int gpr1, int gpr2);
@@ -67,8 +70,8 @@ public:
     static void shlHandler(int gpr1, int gpr2);
     static void shrHandler(int gpr1, int gpr2);
 
-    static void ldHandler(bool fromMemory, int gprBase, int disp, int gprSource);
-    static void stHandler(bool fromMemory, int gprBase, int disp, int gprSource);
+    static void ldHandler(bool fromMemory, int gprBase, int disp, int gprSource, bool fromPool);
+    static void stHandler(bool fromMemory, int gprBase, int disp, int gprSource, bool fromPool);
 
     static void csrrdHandler(int csr, int gpr);
     static void csrwrHandler(int gpr, int csr);

@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "../inc/directives.hpp"
+#include "../inc/freftab.hpp"
 #include "../inc/interface.h"
 #include "../inc/instruction.hpp"
 #include "../inc/line.hpp"
@@ -8,6 +9,8 @@
 #include "../inc/section.hpp"
 #include "../inc/symtab.hpp"
 #include "../misc/parser.tab.h"
+
+int location_counter = 0;
 
 // defines symbol with a particular value
 void defineSymbol(const char* name, int value, bool equ_defined) {
@@ -113,23 +116,33 @@ void oneOpStatementHandler(int stmt, int op) {
 }
 
 void oneOpJumpStatementHandler(int stmt, Operand op) {
-    switch (stmt) {
-        case yytoken_kind_t::JMP:
-            Instruction::jmpHandler(op.disp);
-            break;
-        case yytoken_kind_t::CALL:
-            Instruction::callHandler(op.disp);
-            break;
-    }
-
+    bool fromPool = false;
     if (!op.defined) {
         // add entry to forward reference table
-        std::cout << "adding entry to FREFTAB\n";
+        ForwardReferenceTable* freftab = ObjectFile::getForwardReferenceTable();
+        freftab->addEntry(op.symbol, location_counter);
+        free(op.symbol);        // free memory allocated by strdup
+        fromPool = true;        // the symbol value might be larger than 12b
     }
     else {
         // check if the disp can fit into 12b
-        // if not, correct the instruction 
-        // and add entry to literal pool
+        // if not, add entry to literal pool
+        if (op.disp >= 2048 || op.disp < -2048) 
+            fromPool = true;
+        // todo: add entry to literal pool
+    }
+
+    // todo: if symbol is stored into literal pool
+    // offset to it from current location must be 
+    // passed instead of `op.disp`
+
+    switch (stmt) {
+        case yytoken_kind_t::JMP:
+            Instruction::jmpHandler(op.disp, fromPool);
+            break;
+        case yytoken_kind_t::CALL:
+            Instruction::callHandler(op.disp, fromPool);
+            break;
     }
 }
 
@@ -175,46 +188,66 @@ void twoOpStatementHandler(int stmt, int op1, int op2) {
 }
 
 void threeOpStatementHandler(int stmt, int gpr1, int gpr2, Operand op) {
-    switch (stmt) {
-        case yytoken_kind_t::BEQ:
-            Instruction::beqHandler(gpr1, gpr2, op.disp);
-            break;
-        case yytoken_kind_t::BNE:
-            Instruction::beqHandler(gpr1, gpr2, op.disp);
-            break;
-        case yytoken_kind_t::BGT:
-            Instruction::beqHandler(gpr1, gpr2, op.disp);
-            break;
-    }
-
+    bool fromPool = false;
     if (!op.defined) {
         // add entry to forward reference table
-        std::cout << "adding entry to FREFTAB\n";
+        ForwardReferenceTable* freftab = ObjectFile::getForwardReferenceTable();
+        freftab->addEntry(op.symbol, location_counter);
+        free(op.symbol);        // free memory allocated by strdup
+        fromPool = true;        // the symbol value might be larger than 12b
     }
     else {
         // check if the disp can fit into 12b
-        // if not, correct the instruction 
-        // and add entry to literal pool
+        // if not add entry to literal pool
+        if (op.disp >= 2048 || op.disp < -2048) 
+            fromPool = true;
+        // todo: add entry to literal pool
+    }
+
+    // todo: if symbol is stored into literal pool
+    // offset to it from current location must be 
+    // passed instead of `op.disp`
+
+    switch (stmt) {
+        case yytoken_kind_t::BEQ:
+            Instruction::beqHandler(gpr1, gpr2, op.disp, fromPool);
+            break;
+        case yytoken_kind_t::BNE:
+            Instruction::beqHandler(gpr1, gpr2, op.disp, fromPool);
+            break;
+        case yytoken_kind_t::BGT:
+            Instruction::beqHandler(gpr1, gpr2, op.disp, fromPool);
+            break;
     }
 }
 
 void memoryStatementHandler(int type, Operand op, int gpr) {
-    switch (type) {
-        case yytoken_kind_t::LD:
-            Instruction::ldHandler(op.fromMemory, op.gpr, op.disp, gpr);
-            break;
-        case yytoken_kind_t::ST:
-            Instruction::stHandler(op.fromMemory, op.gpr, op.disp, gpr);
-            break;
-    }
-
+    bool fromPool = false;
     if (!op.defined) {
         // add entry to forward reference table
-        std::cout << "adding entry to FREFTAB\n";
+        ForwardReferenceTable* freftab = ObjectFile::getForwardReferenceTable();
+        freftab->addEntry(op.symbol, location_counter);
+        free(op.symbol);        // free memory allocated by strdup
+        fromPool = true;
     }
     else {
         // check if the disp can fit into 12b
-        // if not, correct the instruction 
-        // and add entry to literal pool
+        // if not, add entry to literal pool
+        if (op.disp >= 2048 || op.disp < -2048) 
+            fromPool = true;
+        // todo: add entry for literal pool
+    }
+
+    // todo: if symbol is stored into literal pool
+    // offset to it from current location must be 
+    // passed instead of `op.disp`
+
+    switch (type) {
+        case yytoken_kind_t::LD:
+            Instruction::ldHandler(op.fromMemory, op.gpr, op.disp, gpr, fromPool);
+            break;
+        case yytoken_kind_t::ST:
+            Instruction::stHandler(op.fromMemory, op.gpr, op.disp, gpr, fromPool);
+            break;
     }
 }

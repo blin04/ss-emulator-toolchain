@@ -7,6 +7,8 @@
 #ifndef _INTERFACE_H_
 #define _INTERFACE_H_
 
+extern int location_counter;     // address (offset) inside a section
+
 // Types
 
 typedef struct operand {
@@ -14,6 +16,7 @@ typedef struct operand {
     int gpr;
     int disp;
     bool defined;
+    char* symbol;
 } Operand;
 
 // Functions

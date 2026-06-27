@@ -41,7 +41,7 @@
   }
 
   int line_num = 1;
-  int location_counter = 0;     // address inside a section
+  extern int location_counter;  // address inside a section
   int total_offset = 0;         // total offset from the beginning of the file
 
 %}
@@ -122,6 +122,8 @@ label:
   SYMBOL COLON { $$ = $1; }
   ;
   
+// semantic value of <directive> non-terminal
+// is the number of bytes it generates 
 directive:
     ASCII STRING { addAsciiDirective($2); $$ = strlen($2) - 2; free($2); }    // -2 because of " and "
   | END { YYACCEPT; /* end parsing successfully */ }
@@ -275,6 +277,7 @@ data_operand:
       $$.gpr = 0; 
       $$.disp = getSymbolValue($2); 
       $$.defined = isDefined($2);
+      $$.symbol = strdup($2);
     }
   | LITERAL { 
       $$.fromMemory = true; 
@@ -287,6 +290,7 @@ data_operand:
       $$.gpr = 0; 
       $$.disp = getSymbolValue($1); 
       $$.defined = isDefined($1);
+      $$.symbol = strdup($1);
     }
   | gpr { 
       $$.fromMemory = false; 
@@ -325,6 +329,7 @@ data_operand:
       $$.gpr = $2; 
       $$.disp = getSymbolValue($4); 
       $$.defined = isDefined($4);
+      $$.symbol = strdup($4);
     }
 
 exp:
