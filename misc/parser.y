@@ -99,16 +99,16 @@ line:
   | statement comment { location_counter += 4; }
   | label comment { 
       if (externSymbol($1)) YYERROR;
-      defineSymbol($1); 
+      defineSymbol($1, location_counter); 
     }
   | label directive comment { 
       if (externSymbol($1)) YYERROR;
-      defineSymbol($1); 
+      defineSymbol($1, location_counter); 
       location_counter += $2; 
     }
   | label statement comment { 
       if (externSymbol($1)) YYERROR;
-      defineSymbol($1); 
+      defineSymbol($1, location_counter); 
       location_counter += 4; 
     }
   | COMMENT
@@ -127,7 +127,7 @@ label:
 directive:
     ASCII STRING { addAsciiDirective($2); $$ = strlen($2) - 2; free($2); }    // -2 because of " and "
   | END { YYACCEPT; /* end parsing successfully */ }
-  | EQU SYMBOL COMMA exp { defineSymbol($2, true); $$ = 0;}
+  | EQU SYMBOL COMMA exp { defineSymbol($2, $4, true); $$ = 0;}
   | EXTERN symbol_list { if (!noDefinedSymbol($2)) { YYERROR; } declareSymbolsExtern($2); $$ = 0; }
   | GLOBAL symbol_list { declareSymbolsGlobal($2); $$ = 0; }
   | SECTION SYMBOL { 
