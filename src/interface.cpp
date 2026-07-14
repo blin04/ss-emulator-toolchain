@@ -13,11 +13,11 @@
 int location_counter = 0;
 
 // defines symbol with a particular value
-void defineSymbol(const char* name, int value, bool equ_defined) {
+void defineSymbol(const char* name, bool equ_defined) {
     ObjectFile::getSymbolTable()->defineSymbol(
         name, 
         ObjectFile::getCurrentSection()->getSectionID(), 
-        value, 
+        location_counter, 
         equ_defined ? SymbolTable::SYMB_ABS : SymbolTable::SYMB_LOC
     );
 }
@@ -116,8 +116,22 @@ void oneOpStatementHandler(int stmt, int op) {
 }
 
 void oneOpJumpStatementHandler(int stmt, Operand op) {
+    SymbolTable* symtab = ObjectFile::getSymbolTable();
     bool fromPool = false;
-    if (!op.defined) {
+
+    // if the value of the symbol can in any way
+    // (it's not absolute or it's not known) exceed 
+    // 12b, the symbol gets added to the literal pool
+
+    // forward reference table entry is generated
+    // for symbols that are not defined
+
+    // relocation entry is generated
+    // for symbols that aren't absolute
+
+
+
+    if (op.symbol != nullptr && symtab->isDefined(op.symbol)) {
         // add entry to forward reference table
         ForwardReferenceTable* freftab = ObjectFile::getForwardReferenceTable();
         freftab->addEntry(op.symbol, location_counter);
@@ -132,6 +146,14 @@ void oneOpJumpStatementHandler(int stmt, Operand op) {
         // todo: add entry to literal pool
     }
 
+    if (fromPool) {
+        Section* currSection = ObjectFile::getCurrentSection();
+        op.disp = currSection->addLiteralPoolValue(op.disp) * 4;
+        // todo: add forward reference table entry that 
+        // should correct the displacement value since
+        // location of the literal pool isn't known
+    }
+
     // todo: if symbol is stored into literal pool
     // offset to it from current location must be 
     // passed instead of `op.disp`
@@ -144,6 +166,9 @@ void oneOpJumpStatementHandler(int stmt, Operand op) {
             Instruction::callHandler(op.disp, fromPool);
             break;
     }
+
+    if (op.symbol != nullptr)
+        free(op.symbol);
 }
 
 void twoOpStatementHandler(int stmt, int op1, int op2) {
@@ -188,8 +213,9 @@ void twoOpStatementHandler(int stmt, int op1, int op2) {
 }
 
 void threeOpStatementHandler(int stmt, int gpr1, int gpr2, Operand op) {
+    SymbolTable* symtab = ObjectFile::getSymbolTable();
     bool fromPool = false;
-    if (!op.defined) {
+    if (op.symbol != nullptr && !symtab->isDefined(op.symbol)) {
         // add entry to forward reference table
         ForwardReferenceTable* freftab = ObjectFile::getForwardReferenceTable();
         freftab->addEntry(op.symbol, location_counter);
@@ -222,8 +248,9 @@ void threeOpStatementHandler(int stmt, int gpr1, int gpr2, Operand op) {
 }
 
 void memoryStatementHandler(int type, Operand op, int gpr) {
+    SymbolTable* symtab = ObjectFile::getSymbolTable();
     bool fromPool = false;
-    if (!op.defined) {
+    if (op.symbol != nullptr && !symtab->isDefined(op.symbol)) {
         // add entry to forward reference table
         ForwardReferenceTable* freftab = ObjectFile::getForwardReferenceTable();
         freftab->addEntry(op.symbol, location_counter);

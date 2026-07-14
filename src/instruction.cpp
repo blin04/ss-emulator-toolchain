@@ -230,5 +230,4 @@ void Instruction::stHandler(bool fromMemory, int gprBase, int disp, int gprSourc
             new Instruction(0b1001, 1, gprBase, gprSource, 0, disp)
         );
     }
-    ObjectFile::getCurrentSection()->addLine(inst);
 }

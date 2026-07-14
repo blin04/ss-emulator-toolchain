@@ -21,6 +21,7 @@ public:
     void declareSymbolGlobal(std::string symbol);
     void declareSymbolExtern(std::string symbol);
     int getSymbolValue(std::string symbol);
+    bool isAbsolute(std::string symbol);
     bool isDefined(std::string symbol);
     bool isExtern(std::string symbol);
     void print();

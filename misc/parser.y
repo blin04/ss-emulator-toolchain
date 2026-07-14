@@ -99,16 +99,16 @@ line:
   | statement comment { location_counter += 4; }
   | label comment { 
       if (externSymbol($1)) YYERROR;
-      defineSymbol($1, location_counter); 
+      defineSymbol($1); 
     }
   | label directive comment { 
       if (externSymbol($1)) YYERROR;
-      defineSymbol($1, location_counter); 
+      defineSymbol($1); 
       location_counter += $2; 
     }
   | label statement comment { 
       if (externSymbol($1)) YYERROR;
-      defineSymbol($1, location_counter); 
+      defineSymbol($1); 
       location_counter += 4; 
     }
   | COMMENT
@@ -127,7 +127,7 @@ label:
 directive:
     ASCII STRING { addAsciiDirective($2); $$ = strlen($2) - 2; free($2); }    // -2 because of " and "
   | END { YYACCEPT; /* end parsing successfully */ }
-  | EQU SYMBOL COMMA exp { defineSymbol($2, $4, true); $$ = 0;}
+  | EQU SYMBOL COMMA exp { defineSymbol($2, true); $$ = 0;}
   | EXTERN symbol_list { if (!noDefinedSymbol($2)) { YYERROR; } declareSymbolsExtern($2); $$ = 0; }
   | GLOBAL symbol_list { declareSymbolsGlobal($2); $$ = 0; }
   | SECTION SYMBOL { 
@@ -256,12 +256,14 @@ jump_operand:
       $$.fromMemory = false;
       $$.gpr = 0;
       $$.disp = $1; 
+      $$.symbol = NULL;
     }
   | SYMBOL { 
       $$.fromMemory = false;
       $$.gpr = 0;
       $$.disp = getSymbolValue($1); 
-      $$.defined = isDefined($1);
+      // $$.absolute = isAbsolute($1);
+      $$.symbol = NULL;
     }
   ;
 
@@ -270,39 +272,43 @@ data_operand:
       $$.fromMemory = false; 
       $$.gpr = 0; 
       $$.disp = $2; 
-      $$.defined = true;
+      // $$.absolute = true;
+      $$.symbol = NULL;
     }
   | DOLLAR SYMBOL { 
       $$.fromMemory = false, 
       $$.gpr = 0; 
       $$.disp = getSymbolValue($2); 
-      $$.defined = isDefined($2);
+      // $$.absolute = isAbsolute($2);
       $$.symbol = strdup($2);
     }
   | LITERAL { 
       $$.fromMemory = true; 
       $$.gpr = 0; 
       $$.disp = $1; 
-      $$.defined = true;
+      // $$.absolute = true;
+      $$.symbol = NULL;
     }
   | SYMBOL { 
       $$.fromMemory = true; 
       $$.gpr = 0; 
       $$.disp = getSymbolValue($1); 
-      $$.defined = isDefined($1);
+      // $$.absolute = isAbsolute($1);
       $$.symbol = strdup($1);
     }
   | gpr { 
       $$.fromMemory = false; 
       $$.gpr = $1; 
       $$.disp = 0; 
-      $$.defined = true;
+      // $$.defined = true;
+      $$.symbol = NULL;
     }
   | LPAR gpr RPAR { 
       $$.fromMemory = true; 
       $$.gpr = $2; 
       $$.disp = 0; 
-      $$.defined = true;
+      // $$.defined = true;
+      $$.symbol = NULL;
     }
   | LPAR gpr PLUS LITERAL RPAR { 
       // 12b signed values are [-2^11, 2^11 - 1]
@@ -314,7 +320,8 @@ data_operand:
       $$.fromMemory = true; 
       $$.gpr = $2; 
       $$.disp = $4; 
-      $$.defined = true;
+      // $$.defined = true;
+      $$.symbol = NULL;
     }
   | LPAR gpr PLUS SYMBOL RPAR { 
       if (isDefined($4) && 
@@ -328,16 +335,17 @@ data_operand:
       $$.fromMemory = true; 
       $$.gpr = $2; 
       $$.disp = getSymbolValue($4); 
-      $$.defined = isDefined($4);
+      // $$.absolute = isAbsolute($4);
       $$.symbol = strdup($4);
     }
+  ;
 
 exp:
     exp PLUS exp {$$ = $1 + $3; }
   | exp MINUS exp { $$ = $1 - $3; }
   | SYMBOL { $$ = getSymbolValue($1); }
   | LITERAL { $$ = $1; }
-
+  ;
 
 // for csr and gpr index of the used register
 // (per CPU architecture) is returned

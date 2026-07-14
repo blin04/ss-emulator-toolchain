@@ -1,6 +1,8 @@
 #include "../inc/symtab.hpp"
 
+#include <iomanip>
 #include <iostream>
+#include <string>
 
 SymbolTable::~SymbolTable() {
     for (auto it = symbols.begin(); it != symbols.end(); it++) {
@@ -31,9 +33,20 @@ void SymbolTable::defineSymbol(std::string name, int sectionId, int offset, Symb
     else addEntry(name, sectionId, offset, type, true);
 }
 
+// symbol is defined if it was defined in code 
+// either as a label or with .equ directive
+// note: the value of defined symbol may not be final
 bool SymbolTable::isDefined(std::string symbol) { 
     if (symbols.count(symbol))
         return symbols[symbol]->defined;
+    return false;
+}
+
+// symbol is absolute if it was
+// defined with .equ directive
+bool SymbolTable::isAbsolute(std::string symbol) {
+    if (symbols.count(symbol))
+        return symbols[symbol]->type == SYMB_ABS;
     return false;
 }
 
@@ -70,14 +83,34 @@ int SymbolTable::getSymbolValue(std::string symbol) {
 }
 
 void SymbolTable::print() {
-    std::cout << "\tName | Section ID | Offset | Type | Defined? \n";
+    int nameWidth = 4;
+    for (const auto& symb : symbols) {
+        if (symb.second->name.size() > nameWidth) nameWidth = symb.second->name.size();
+    }
 
-    for (auto symb : symbols) {
-        std::cout << '\t' << symb.second->name << " | " << symb.second->section << " | " << symb.second->offset << " | ";
-        if (symb.second->type == SYMB_ABS) std::cout << "ABS";
-        else if (symb.second->type == SYMB_GLOB) std::cout << "GLOB";
-        else if (symb.second->type == SYMB_LOC) std::cout << "LOC";
-        else std::cout << "UND";
-        std::cout << " | " << (symb.second->defined ? "yes" : "no") << "\n";
+    const int sectionWidth = 10;
+    const int offsetWidth = 6;
+    const int typeWidth = 5;
+    const int definedWidth = 7;
+
+    std::cout << std::left
+              << std::setw(nameWidth) << "Name" << " | "
+              << std::setw(sectionWidth) << "Section ID" << " | "
+              << std::setw(offsetWidth) << "Offset" << " | "
+              << std::setw(typeWidth) << "Type" << " | "
+              << std::setw(definedWidth) << "Defined?" << "\n";
+
+    for (const auto& symb : symbols) {
+        std::string type = "UND";
+        if (symb.second->type == SYMB_ABS) type = "ABS";
+        else if (symb.second->type == SYMB_GLOB) type = "GLOB";
+        else if (symb.second->type == SYMB_LOC) type = "LOC";
+
+        std::cout << std::left
+                  << std::setw(nameWidth) << symb.second->name << " | "
+                  << std::setw(sectionWidth) << symb.second->section << " | "
+                  << std::setw(offsetWidth) << symb.second->offset << " | "
+                  << std::setw(typeWidth) << type << " | "
+                  << std::setw(definedWidth) << (symb.second->defined ? "yes" : "no") << "\n";
     }
 }

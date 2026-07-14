@@ -12,11 +12,11 @@ extern int location_counter;     // address (offset) inside a section
 // Types
 
 typedef struct operand {
-    bool fromMemory;
-    int gpr;
-    int disp;
-    bool defined;
-    char* symbol;
+    bool    fromMemory;
+    int     gpr;
+    int     disp;
+    // bool    absolute;
+    char*   symbol;
 } Operand;
 
 // Functions
@@ -26,7 +26,7 @@ void addAsciiDirective(const char* str);
 void addSkipDirective(int bytes_count);
 int addWordDirective(char** initializers);
 
-void defineSymbol(const char* name, int value, bool equ_defined = false);
+void defineSymbol(const char* name, bool equ_defined = false);
 void declareSymbolsGlobal(char** symbols);
 void declareSymbolsExtern(char** symbols);
 int getSymbolValue(const char* name);
