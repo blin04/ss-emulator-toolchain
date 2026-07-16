@@ -13,11 +13,11 @@
 int location_counter = 0;
 
 // defines symbol with a particular value
-void defineSymbol(const char* name, bool equ_defined) {
+void defineSymbol(const char* name, int value, bool equ_defined) {
     ObjectFile::getSymbolTable()->defineSymbol(
         name, 
         ObjectFile::getCurrentSection()->getSectionID(), 
-        location_counter, 
+        value, 
         equ_defined ? SymbolTable::SYMB_ABS : SymbolTable::SYMB_LOC
     );
 }
