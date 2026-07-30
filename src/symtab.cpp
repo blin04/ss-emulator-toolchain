@@ -73,6 +73,7 @@ int SymbolTable::getSymbolValue(std::string symbol) {
     // the symbol is marked LOC, but this can
     // be changed to UND during backpatching phase
     // if no definition of the symbol was found
+    // in the file that was assembled
     //
     // entry to forward reference table is added
     // during instruction creation 

@@ -133,7 +133,6 @@ directive:
   | SECTION SYMBOL { 
       total_offset += location_counter; 
       startNewSection($2, total_offset); 
-      location_counter = 0;       // resets the location counter
       $$ = 0;
     }
   | SKIP LITERAL { addSkipDirective($2); $$ = $2;}
@@ -263,7 +262,7 @@ jump_operand:
       $$.gpr = 0;
       $$.disp = getSymbolValue($1); 
       // $$.absolute = isAbsolute($1);
-      $$.symbol = NULL;
+      $$.symbol = strdup($1);
     }
   ;
 
@@ -324,8 +323,12 @@ data_operand:
       $$.symbol = NULL;
     }
   | LPAR gpr PLUS SYMBOL RPAR { 
-      if (isDefined($4) && 
-        (getSymbolValue($4) >= (1 << 11) || 
+      if (!isDefined($4)) {
+        yyerror("unknown symbol value: displacement value for base register addressing must be known during assembling");
+        YYERROR;
+      }
+
+      if ((getSymbolValue($4) >= (1 << 11) || 
         getSymbolValue($4) < -(1 << 11))) {
 
         yyerror("symbol value too large: displacement for base register addressing must fit as a signed value in 12b");

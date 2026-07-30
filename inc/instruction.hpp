@@ -42,6 +42,7 @@ public:
     // depending on displacement values
 
     // Functions for instruction creation
+    // big-endian is used for storing the instructions
 
     static void haltHandler();
     static void intHandler();

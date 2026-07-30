@@ -49,6 +49,7 @@ bool isExtern(const char* symbol) { return ObjectFile::getSymbolTable()->isExter
 void startNewSection(const char* name, int offset) {
     std::cout << "creating section named " << name << "\n";
     ObjectFile::getInstance()->newSection(name, offset);
+    location_counter = 0;       // resets the location counter
 }
 
 void addDirective() {
@@ -120,7 +121,7 @@ void oneOpJumpStatementHandler(int stmt, Operand op) {
     bool fromPool = false;
 
     // if the value of the symbol can in any way
-    // (it's not absolute or it's not known) exceed 
+    // (it's not absolute or it's not defined) exceed 
     // 12b, the symbol gets added to the literal pool
 
     // forward reference table entry is generated
@@ -129,34 +130,31 @@ void oneOpJumpStatementHandler(int stmt, Operand op) {
     // relocation entry is generated
     // for symbols that aren't absolute
 
-
-
-    if (op.symbol != nullptr && symtab->isDefined(op.symbol)) {
-        // add entry to forward reference table
-        ForwardReferenceTable* freftab = ObjectFile::getForwardReferenceTable();
-        freftab->addEntry(op.symbol, location_counter);
-        free(op.symbol);        // free memory allocated by strdup
-        fromPool = true;        // the symbol value might be larger than 12b
+    if (op.symbol != nullptr && !symtab->isDefined(op.symbol)) {
+        // symbol isn't defined, so it's entirely possible
+        // that is runtime value exceeds 12b
+        fromPool = true;        
     }
     else {
-        // check if the disp can fit into 12b
-        // if not, add entry to literal pool
+        // branch is entered if either a defined symbol 
+        // or a literal are encountered
+        // the corresponding value is stored in `disp` field
+        // if disp can't fit into 12b, it must be stored in
+        // literal pool 
         if (op.disp >= 2048 || op.disp < -2048) 
             fromPool = true;
-        // todo: add entry to literal pool
     }
 
     if (fromPool) {
+        // `disp` field equals to offset in bytes from 
+        // the start of literal pool to the added value
+        // this makes it easy to patch it up once the 
+        // literal pool start address is known - the
+        // star address only needs to be added to 
+        // the stored displacement value
         Section* currSection = ObjectFile::getCurrentSection();
-        op.disp = currSection->addLiteralPoolValue(op.disp) * 4;
-        // todo: add forward reference table entry that 
-        // should correct the displacement value since
-        // location of the literal pool isn't known
+        op.disp = currSection->addLiteralPoolValue(op.disp, op.symbol) * 4;
     }
-
-    // todo: if symbol is stored into literal pool
-    // offset to it from current location must be 
-    // passed instead of `op.disp`
 
     switch (stmt) {
         case yytoken_kind_t::JMP:
@@ -215,11 +213,8 @@ void twoOpStatementHandler(int stmt, int op1, int op2) {
 void threeOpStatementHandler(int stmt, int gpr1, int gpr2, Operand op) {
     SymbolTable* symtab = ObjectFile::getSymbolTable();
     bool fromPool = false;
+
     if (op.symbol != nullptr && !symtab->isDefined(op.symbol)) {
-        // add entry to forward reference table
-        ForwardReferenceTable* freftab = ObjectFile::getForwardReferenceTable();
-        freftab->addEntry(op.symbol, location_counter);
-        free(op.symbol);        // free memory allocated by strdup
         fromPool = true;        // the symbol value might be larger than 12b
     }
     else {
@@ -227,7 +222,11 @@ void threeOpStatementHandler(int stmt, int gpr1, int gpr2, Operand op) {
         // if not add entry to literal pool
         if (op.disp >= 2048 || op.disp < -2048) 
             fromPool = true;
-        // todo: add entry to literal pool
+    }
+
+    if (fromPool) {
+        Section* currSection = ObjectFile::getCurrentSection();
+        op.disp = currSection->addLiteralPoolValue(op.disp, op.symbol) * 4;
     }
 
     // todo: if symbol is stored into literal pool
@@ -239,22 +238,22 @@ void threeOpStatementHandler(int stmt, int gpr1, int gpr2, Operand op) {
             Instruction::beqHandler(gpr1, gpr2, op.disp, fromPool);
             break;
         case yytoken_kind_t::BNE:
-            Instruction::beqHandler(gpr1, gpr2, op.disp, fromPool);
+            Instruction::bneHandler(gpr1, gpr2, op.disp, fromPool);
             break;
         case yytoken_kind_t::BGT:
-            Instruction::beqHandler(gpr1, gpr2, op.disp, fromPool);
+            Instruction::bgtHandler(gpr1, gpr2, op.disp, fromPool);
             break;
     }
+
+    if (op.symbol != nullptr)
+        free(op.symbol);
 }
 
 void memoryStatementHandler(int type, Operand op, int gpr) {
     SymbolTable* symtab = ObjectFile::getSymbolTable();
     bool fromPool = false;
+
     if (op.symbol != nullptr && !symtab->isDefined(op.symbol)) {
-        // add entry to forward reference table
-        ForwardReferenceTable* freftab = ObjectFile::getForwardReferenceTable();
-        freftab->addEntry(op.symbol, location_counter);
-        free(op.symbol);        // free memory allocated by strdup
         fromPool = true;
     }
     else {
@@ -262,12 +261,12 @@ void memoryStatementHandler(int type, Operand op, int gpr) {
         // if not, add entry to literal pool
         if (op.disp >= 2048 || op.disp < -2048) 
             fromPool = true;
-        // todo: add entry for literal pool
     }
 
-    // todo: if symbol is stored into literal pool
-    // offset to it from current location must be 
-    // passed instead of `op.disp`
+    if (fromPool) {
+        Section* currSection = ObjectFile::getCurrentSection();
+        op.disp = currSection->addLiteralPoolValue(op.disp, op.symbol) * 4;
+    }
 
     switch (type) {
         case yytoken_kind_t::LD:
@@ -277,4 +276,7 @@ void memoryStatementHandler(int type, Operand op, int gpr) {
             Instruction::stHandler(op.fromMemory, op.gpr, op.disp, gpr, fromPool);
             break;
     }
+
+    if (op.symbol != nullptr)
+        free(op.symbol);
 }

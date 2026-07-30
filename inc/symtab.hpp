@@ -15,8 +15,6 @@ public:
 
     ~SymbolTable();
 
-    void addForwardReference();
-    void backpatch();
     void defineSymbol(std::string name, int sectionId, int offset, SymbolType type);
     void declareSymbolGlobal(std::string symbol);
     void declareSymbolExtern(std::string symbol);
