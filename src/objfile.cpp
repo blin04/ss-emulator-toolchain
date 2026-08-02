@@ -2,7 +2,6 @@
 
 #include <iostream>
 
-#include "../inc/freftab.hpp"
 #include "../inc/objfile.hpp"
 #include "../inc/section.hpp"
 #include "../inc/symtab.hpp"
@@ -10,21 +9,12 @@
 ObjectFile::ObjectFile() {
     currentSection = nullptr;
     symbolTable = new SymbolTable();
-    freftab = new ForwardReferenceTable();
 }
 
 ObjectFile::~ObjectFile() {
     for (int i = 0; i < sections.size(); i++)
         delete sections[i];
     delete symbolTable;
-}
-
-void ObjectFile::backpatch() {
-    // for each entry in forward reference table:
-    //      if entry.symbol is defined:
-    //          patch location with correct value
-    //      else:
-    //          generate a relocation entry, mark the symbol UND in symbol table
 }
 
 ObjectFile* ObjectFile::getInstance() {
@@ -40,10 +30,6 @@ SymbolTable* ObjectFile::getSymbolTable() {
     return getInstance()->symbolTable;
 }
  
-ForwardReferenceTable* ObjectFile::getForwardReferenceTable() {
-    return getInstance()->freftab;
-}
-
 void ObjectFile::newSection(std::string name, int offset) {
     if (currentSection != nullptr)
         sections.push_back(currentSection);

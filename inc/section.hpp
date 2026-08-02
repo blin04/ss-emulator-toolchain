@@ -3,13 +3,12 @@
 
 #include <vector>
 #include <unordered_map>
+#include <map>
 #include <fstream>
 
 enum RelocType { ABS, REL };
 
 class Line;
-class RelocationTable;
-class ForwardReferenceTable;
 
 class Section {
 public:
@@ -21,7 +20,7 @@ public:
     void addLine(Line*, bool fromPool = false);
     // returns index of the added value in the pool
     int addLiteralPoolValue(int value, const char* symbol);
-    ForwardReferenceTable* getForwardReferenceTable();
+    void backpatch();
     int getSectionID();
     void serialize(std::ofstream& file);
 private:
@@ -46,7 +45,7 @@ private:
     // list of indexes of instructions that access 
     // symbols in literal pool with pc relative addressing 
     std::vector<int> dispFixupIndexes;
-    ForwardReferenceTable* freftab;
+    std::map<std::string, std::vector<int>> freftab;
     int index;
     std::vector<Line*> lines;
     std::vector<LitPoolEntry*> literalPool;

@@ -23,7 +23,7 @@ int main() {
     // Debug purposes
     output->printSymbolTable();
 
-    output->backpatch();
+    // output->backpatch();
 
     // Generate object file
     output->generate();

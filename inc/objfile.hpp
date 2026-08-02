@@ -13,7 +13,6 @@ class ObjectFile {
 public:
     ~ObjectFile();
 
-    void backpatch();
     void generate();
     void newSection(std::string name, int offset);
     void printSymbolTable();
@@ -21,11 +20,9 @@ public:
     static Section* getCurrentSection();
     static SymbolTable* getSymbolTable();
     static ObjectFile* getInstance();
-    static ForwardReferenceTable* getForwardReferenceTable();
 private:
     ObjectFile();
 
-    ForwardReferenceTable* freftab;
     Section* currentSection;
     std::vector<Section*> sections;
     SymbolTable* symbolTable;

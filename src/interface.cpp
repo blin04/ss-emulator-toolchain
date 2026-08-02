@@ -1,7 +1,6 @@
 #include <iostream>
 
 #include "../inc/directives.hpp"
-#include "../inc/freftab.hpp"
 #include "../inc/interface.h"
 #include "../inc/instruction.hpp"
 #include "../inc/line.hpp"

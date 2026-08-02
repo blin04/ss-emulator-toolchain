@@ -1,7 +1,5 @@
-#include "../inc/freftab.hpp"
 #include "../inc/line.hpp"
 #include "../inc/objfile.hpp"
-#include "../inc/reloc.hpp"
 #include "../inc/section.hpp"
 #include "../inc/symtab.hpp"
 
@@ -14,8 +12,7 @@ Section::Section(std::string sectionName, int offset)
     : index(counter++) 
     , name(sectionName)
     , offset(offset)
-    , startAddress(0) 
-    , freftab(new ForwardReferenceTable()) {
+    , startAddress(0) {
     std::cout << "SectionTable[" << index << "]: created " << name << " at " << offset << "B from the start\n";
     ObjectFile::getSymbolTable()->defineSymbol(sectionName, index, 0, SymbolTable::SYMB_LOC);
 }
@@ -66,7 +63,27 @@ int Section::addRelocation(int offset, RelocType type , std::string symbol, int 
     return relocations.size() - 1;
 }
 
-ForwardReferenceTable* Section::getForwardReferenceTable() { return freftab; }
+void Section::backpatch() {
+    // for each entry in forward reference table:
+    //      if entry.symbol is defined:
+    //          patch location with correct value
+    //      else:
+    //          generate a relocation entry, mark the symbol UND in symbol table
+    SymbolTable* symtab = ObjectFile::getSymbolTable();
+    for (auto& e : freftab) {
+        std::string symbol = e.first;
+        if (symtab->isDefined(symbol)) {
+            int value = symtab->getSymbolValue(symbol);
+            for (int i = 0; i < e.second.size(); i++) {
+                // todo: patch...
+            }
+        }
+        else {
+            // generate relocation entry
+            symtab->declareSymbolExtern(symbol);
+        }
+    }
+}
 
 int Section::getSectionID() { return index; }
 
@@ -104,11 +121,19 @@ void Section::serialize(std::ofstream& out) {
 
     // serialize literal pool
     // values are stored in little endian format
+    // if a symbol referenced in the pool isn't
+    // defined at this point, a relocation entry
+    // is generated
 
     int mask = 0xffff;
     int value;
+    SymbolTable* symtab = ObjectFile::getSymbolTable();
     for (LitPoolEntry* l : literalPool) {
-        value = l->value;
+        if (!symtab->isDefined(l->symbol)) {
+            // todo: add relocation entry
+            value = 0;
+        }
+        else value = l->value;
         for (int i = 0; i < 4; i++) {
             section_bytes.push_back(value & mask);
             value >>= 8;
