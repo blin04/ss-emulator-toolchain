@@ -2,6 +2,8 @@
 #define _SYMBOL_TABLE_H
 
 #include <fstream>
+#include <iostream>
+#include <ostream>
 #include <map>
 
 class SymbolTable {
@@ -19,16 +21,17 @@ public:
     void declareSymbolGlobal(std::string symbol);
     void declareSymbolExtern(std::string symbol);
     int getSymbolValue(std::string symbol);
+    int getSymbolIndex(std::string symbol);
     bool isAbsolute(std::string symbol);
     bool isDefined(std::string symbol);
     bool isExtern(std::string symbol);
-    void print();
+    void print(std::ostream& out = std::cout);
     void serialize(std::ofstream& out);
 private:
     typedef struct {
         std::string name;
         int         section;
-        int         offset;
+        int         value;          // SYMB_LOC: offset in bytes from section start
         SymbolType  type;
         bool        defined;        // says if the symbol's value is known
     } Entry;

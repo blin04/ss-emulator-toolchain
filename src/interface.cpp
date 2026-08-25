@@ -11,6 +11,63 @@
 
 int location_counter = 0;
 
+bool handleOperand(Operand &op) {
+    SymbolTable* symtab = ObjectFile::getSymbolTable();
+    bool fromPool = false;
+
+    // if the value of the symbol can in any way
+    // (it's not absolute or it's not defined) exceed 
+    // 12b, the symbol gets added to the literal pool
+
+    // forward reference table entry is generated
+    // for symbols that are not defined
+
+    // relocation entry is generated
+    // for symbols that aren't absolute
+
+    if (op.symbol != nullptr && !symtab->isDefined(op.symbol)) {
+        // symbol isn't defined, so it's entirely possible
+        // that is runtime value exceeds 12b
+        fromPool = true;        
+    }
+    else {
+        // branch is entered if either a defined symbol 
+        // or a literal are encountered
+        // the corresponding value is stored in `disp` field
+        // if disp can't fit into 12b, it must be stored in
+        // literal pool 
+        if (op.disp >= 2048 || op.disp < -2048) 
+            fromPool = true;
+    }
+
+    if (fromPool) {
+        // `disp` field equals to offset in bytes from 
+        // the start of literal pool to the added value
+        // this makes it easy to patch it up once the 
+        // literal pool start address is known - the
+        // star address only needs to be added to 
+        // the stored displacement value
+        // relocation entry, if needed, is generated 
+        // during literal pool serialization
+        op.disp = ObjectFile::getCurrentSection()->addLiteralPoolValue(op.disp, op.symbol) * 4;
+    }
+    else {
+        // a relocation entry for a symbol 
+        // that's referenced absolutely
+        // must be generated
+        if (op.symbol != nullptr && !symtab->isAbsolute(op.symbol)) {
+            // todo: add relocation entry
+            ObjectFile::getCurrentSection()->addRelocation(
+                location_counter,
+                RelocType::ABS,
+                symtab->getSymbolIndex(op.symbol),
+                0 
+            ); 
+        }
+    }
+    return fromPool;
+}
+
 // defines symbol with a particular value
 void defineSymbol(const char* name, int value, bool equ_defined) {
     ObjectFile::getSymbolTable()->defineSymbol(
@@ -115,45 +172,12 @@ void oneOpStatementHandler(int stmt, int op) {
     }
 }
 
+/*
+*   Handles: [call | jmp] <operand>
+*/
 void oneOpJumpStatementHandler(int stmt, Operand op) {
-    SymbolTable* symtab = ObjectFile::getSymbolTable();
-    bool fromPool = false;
 
-    // if the value of the symbol can in any way
-    // (it's not absolute or it's not defined) exceed 
-    // 12b, the symbol gets added to the literal pool
-
-    // forward reference table entry is generated
-    // for symbols that are not defined
-
-    // relocation entry is generated
-    // for symbols that aren't absolute
-
-    if (op.symbol != nullptr && !symtab->isDefined(op.symbol)) {
-        // symbol isn't defined, so it's entirely possible
-        // that is runtime value exceeds 12b
-        fromPool = true;        
-    }
-    else {
-        // branch is entered if either a defined symbol 
-        // or a literal are encountered
-        // the corresponding value is stored in `disp` field
-        // if disp can't fit into 12b, it must be stored in
-        // literal pool 
-        if (op.disp >= 2048 || op.disp < -2048) 
-            fromPool = true;
-    }
-
-    if (fromPool) {
-        // `disp` field equals to offset in bytes from 
-        // the start of literal pool to the added value
-        // this makes it easy to patch it up once the 
-        // literal pool start address is known - the
-        // star address only needs to be added to 
-        // the stored displacement value
-        Section* currSection = ObjectFile::getCurrentSection();
-        op.disp = currSection->addLiteralPoolValue(op.disp, op.symbol) * 4;
-    }
+    bool fromPool = handleOperand(op);
 
     switch (stmt) {
         case yytoken_kind_t::JMP:
@@ -209,28 +233,12 @@ void twoOpStatementHandler(int stmt, int op1, int op2) {
     }
 }
 
+/*
+*   Handles: [beq | bne | bgt] <gpr1>, <gpr2>, <operand>
+*/
 void threeOpStatementHandler(int stmt, int gpr1, int gpr2, Operand op) {
-    SymbolTable* symtab = ObjectFile::getSymbolTable();
-    bool fromPool = false;
 
-    if (op.symbol != nullptr && !symtab->isDefined(op.symbol)) {
-        fromPool = true;        // the symbol value might be larger than 12b
-    }
-    else {
-        // check if the disp can fit into 12b
-        // if not add entry to literal pool
-        if (op.disp >= 2048 || op.disp < -2048) 
-            fromPool = true;
-    }
-
-    if (fromPool) {
-        Section* currSection = ObjectFile::getCurrentSection();
-        op.disp = currSection->addLiteralPoolValue(op.disp, op.symbol) * 4;
-    }
-
-    // todo: if symbol is stored into literal pool
-    // offset to it from current location must be 
-    // passed instead of `op.disp`
+    bool fromPool = handleOperand(op);
 
     switch (stmt) {
         case yytoken_kind_t::BEQ:
@@ -248,24 +256,12 @@ void threeOpStatementHandler(int stmt, int gpr1, int gpr2, Operand op) {
         free(op.symbol);
 }
 
+/*
+*   Handles: ld <operand>, <gpr> | st <gpr>, <operand>
+*/
 void memoryStatementHandler(int type, Operand op, int gpr) {
-    SymbolTable* symtab = ObjectFile::getSymbolTable();
-    bool fromPool = false;
 
-    if (op.symbol != nullptr && !symtab->isDefined(op.symbol)) {
-        fromPool = true;
-    }
-    else {
-        // check if the disp can fit into 12b
-        // if not, add entry to literal pool
-        if (op.disp >= 2048 || op.disp < -2048) 
-            fromPool = true;
-    }
-
-    if (fromPool) {
-        Section* currSection = ObjectFile::getCurrentSection();
-        op.disp = currSection->addLiteralPoolValue(op.disp, op.symbol) * 4;
-    }
+    bool fromPool = handleOperand(op);
 
     switch (type) {
         case yytoken_kind_t::LD:

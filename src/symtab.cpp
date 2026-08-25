@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <iostream>
 #include <string>
+#include <cstdint>
 
 SymbolTable::~SymbolTable() {
     for (auto it = symbols.begin(); it != symbols.end(); it++) {
@@ -10,24 +11,36 @@ SymbolTable::~SymbolTable() {
     }
 }
 
-void SymbolTable::addEntry(std::string name, int sectionId, int offset, SymbolType type, bool defined) {
+void SymbolTable::addEntry(std::string name, int sectionId, int value, SymbolType type, bool defined) {
     Entry* e = new Entry();
     e->name = name;
     e->section = sectionId;
-    e->offset = offset;
+    e->value = value;
     e->type = type;
     e->defined = defined;
     symbols[name] = e;
 }
 
-void SymbolTable::serialize(std::ofstream& out) {}
+void SymbolTable::serialize(std::ofstream& out) {
+    Entry* e;
+    for (auto& symb : symbols) {
+        e = symb.second;
+        // serialize name
+        char name[32];
+        e->name.copy(name, 32, 0);
+        for (int i = 0; i < 32; i++) out << (uint8_t)name[i];
+        out << (uint8_t)e->section;
+        out << e->value;
+        out << e->type;
+    }
+}
 
 void SymbolTable::defineSymbol(std::string name, int sectionId, int offset, SymbolType type) {
     if (symbols.count(name)) {
         // if symbol is already present in the table it means
         // that it was mentioned in a directive or statement
         symbols[name]->section = sectionId;
-        symbols[name]->offset = offset;
+        symbols[name]->value = offset;
         symbols[name]->defined = true;
     }
     else addEntry(name, sectionId, offset, type, true);
@@ -80,10 +93,15 @@ int SymbolTable::getSymbolValue(std::string symbol) {
 
     if (symbols.count(symbol) == 0)
         addEntry(symbol, 0, 0, SYMB_LOC, false);
-    return symbols[symbol]->offset; 
+    return symbols[symbol]->value; 
 }
 
-void SymbolTable::print() {
+int SymbolTable::getSymbolIndex(std::string symbol) {
+    // only a placeholder for now
+    return -1;
+}
+
+void SymbolTable::print(std::ostream& out) {
     int nameWidth = 4;
     for (const auto& symb : symbols) {
         if (symb.second->name.size() > nameWidth) nameWidth = symb.second->name.size();
@@ -94,12 +112,12 @@ void SymbolTable::print() {
     const int typeWidth = 5;
     const int definedWidth = 7;
 
-    std::cout << std::left
-              << std::setw(nameWidth) << "Name" << " | "
-              << std::setw(sectionWidth) << "Section ID" << " | "
-              << std::setw(offsetWidth) << "Offset" << " | "
-              << std::setw(typeWidth) << "Type" << " | "
-              << std::setw(definedWidth) << "Defined?" << "\n";
+    out << std::left
+        << std::setw(nameWidth) << "Name" << " | "
+        << std::setw(sectionWidth) << "Section ID" << " | "
+        << std::setw(offsetWidth) << "Offset" << " | "
+        << std::setw(typeWidth) << "Type" << " | "
+        << std::setw(definedWidth) << "Defined?" << "\n";
 
     for (const auto& symb : symbols) {
         std::string type = "UND";
@@ -107,11 +125,11 @@ void SymbolTable::print() {
         else if (symb.second->type == SYMB_GLOB) type = "GLOB";
         else if (symb.second->type == SYMB_LOC) type = "LOC";
 
-        std::cout << std::left
-                  << std::setw(nameWidth) << symb.second->name << " | "
-                  << std::setw(sectionWidth) << symb.second->section << " | "
-                  << std::setw(offsetWidth) << symb.second->offset << " | "
-                  << std::setw(typeWidth) << type << " | "
-                  << std::setw(definedWidth) << (symb.second->defined ? "yes" : "no") << "\n";
+        out << std::left
+            << std::setw(nameWidth) << symb.second->name << " | "
+            << std::setw(sectionWidth) << symb.second->section << " | "
+            << std::setw(offsetWidth) << symb.second->value << " | "
+            << std::setw(typeWidth) << type << " | "
+            << std::setw(definedWidth) << (symb.second->defined ? "yes" : "no") << "\n";
     }
 }

@@ -4,6 +4,7 @@
 #include "../inc/symtab.hpp"
 
 #include <iostream>
+#include <iomanip>
 
 // sections are numbered starting from 1
 int Section::counter = 1;
@@ -45,19 +46,16 @@ int Section::addLiteralPoolValue(int value, const char* symbol) {
     e->symbol = (symbol != nullptr ? symbol : "");
     literalPool.push_back(e);
 
-    // todo: add relocation entry if the 
-    // symbol isn't defined
-
     int idx = literalPool.size() - 1;
     literalPoolIndex[key] = idx;
     return idx;
 }
 
-int Section::addRelocation(int offset, RelocType type , std::string symbol, int addend) {
+int Section::addRelocation(int offset, RelocType type , int symbolIndex, int addend) {
     RelocEntry* e = new RelocEntry();
     e->offset = offset;
     e->type = type;
-    e->symbol = symbol;
+    e->symbol = symbolIndex;
     e->addend = addend;
     relocations.push_back(e);
     return relocations.size() - 1;
@@ -72,15 +70,33 @@ void Section::backpatch() {
     SymbolTable* symtab = ObjectFile::getSymbolTable();
     for (auto& e : freftab) {
         std::string symbol = e.first;
-        if (symtab->isDefined(symbol)) {
-            int value = symtab->getSymbolValue(symbol);
-            for (int i = 0; i < e.second.size(); i++) {
-                // todo: patch...
+        bool defined = symtab->isDefined(symbol);
+        int value = 0;
+
+        if (defined) value = symtab->getSymbolValue(symbol);
+        else symtab->declareSymbolExtern(symbol);
+
+        for (int i = 0; i < e.second.size(); i++) {
+            if (value) {
+                // b4 | b3 | b2 | b1
+                int b1 = value & 0xff;
+                int b2 = (value >> 8) & 0xff;
+                int b3 = (value >> 16) & 0xff;
+                int b4 = (value >> 24) & 0xff;
+
+                section_bytes[e.second[i]] = b4;
+                section_bytes[e.second[i] + 1] = b3;
+                section_bytes[e.second[i] + 2] = b2;
+                section_bytes[e.second[i] + 3] = b1;
             }
-        }
-        else {
-            // generate relocation entry
-            symtab->declareSymbolExtern(symbol);
+            else {
+                addRelocation(
+                    e.second[i],
+                    ABS,
+                    symtab->getSymbolIndex(symbol),
+                    0
+                );
+            }
         }
     }
 }
@@ -89,7 +105,8 @@ int Section::getSectionID() { return index; }
 
 void Section::serialize(std::ofstream& out) {
     // serialize section
-    std::vector<uint8_t> section_bytes;
+
+    out << "#." << name << "\n";
     for (Line* l : lines) {
         std::vector<uint8_t> bytes = l->generateBytes();
         for (uint8_t byte : bytes) 
@@ -127,21 +144,95 @@ void Section::serialize(std::ofstream& out) {
 
     int mask = 0xffff;
     int value;
+    std::vector<uint8_t> litpool_bytes;
     SymbolTable* symtab = ObjectFile::getSymbolTable();
-    for (LitPoolEntry* l : literalPool) {
+    for (int i = 0; i < literalPool.size(); i++) {
+        LitPoolEntry* l = literalPool[i];
+        
         if (!symtab->isDefined(l->symbol)) {
-            // todo: add relocation entry
+            addRelocation(
+                litpool_start + 4*i,
+                RelocType::ABS,
+                symtab->getSymbolIndex(l->symbol),
+                0
+            );
             value = 0;
         }
         else value = l->value;
-        for (int i = 0; i < 4; i++) {
-            section_bytes.push_back(value & mask);
+
+        // serialize
+        for (int j = 0; j < 4; j++) {
+            litpool_bytes.push_back(value & mask);
             value >>= 8;
         }
     }
 
-    // write buffer to output
+    backpatch();
 
-    for (uint8_t byte : section_bytes) 
-        out << byte;
+    // write section contents to output
+    bool newline = false;
+    out << "#." << name << "\n";
+    for (int i = 0; i < section_bytes.size(); i += 4) {
+        out << std::hex << std::setw(2) << section_bytes[i];
+        out << " ";
+        out << std::hex << std::setw(2) << section_bytes[i + 1];
+        out << " ";
+        out << std::hex << std::setw(2) << section_bytes[i + 2];
+        out << " ";
+        out << std::hex << std::setw(2) << section_bytes[i + 3];
+        if (newline) out << "\n";
+        else out << "    ";
+        newline = !newline;
+    }
+
+    if (newline) {
+        out << "\n";
+        newline = false;
+    }
+
+    // write literal pool contents to output
+    out << "#." << name << ".litpool\n";
+    for (int i = 0; i < litpool_bytes.size(); i += 4) {
+        out << std::hex << std::setw(2) << litpool_bytes[i];
+        out << " ";
+        out << std::hex << std::setw(2) << litpool_bytes[i + 1];
+        out << " ";
+        out << std::hex << std::setw(2) << litpool_bytes[i + 2];
+        out << " ";
+        out << std::hex << std::setw(2) << litpool_bytes[i + 3];
+        if (newline) out << "\n";
+        else out << "    ";
+        newline = !newline;
+    }
+
+    if (newline) {
+        out << "\n";
+        newline = false;
+    }
+
+    // write relocation entries to output
+    out << "#." << name << ".rela\n";
+
+    const int offsetWidth = 6;
+    const int typeWidth = 5;
+    const int symbolWidth = 20;
+    const int addendWidth = 10;
+
+    out << "#." << name << ".rela\n";
+    out << std::left
+        << std::setw(offsetWidth) << "Offset" << " | "
+        << std::setw(typeWidth) << "Type" << " | "
+        << std::setw(symbolWidth) << "Symbol" << " | "
+        << std::setw(addendWidth) << "Addend" << "\n";
+
+    for (RelocEntry* rela : relocations) {
+        std::string type = "ABS";
+        if (rela->type == REL) type = "REL";
+
+        out << std::left
+            << std::setw(offsetWidth) << rela->offset << " | "
+            << std::setw(typeWidth) << type << " | "
+            << std::setw(symbolWidth) << rela->symbol << " | "
+            << std::setw(addendWidth) << rela->addend << "\n";
+    }
 }

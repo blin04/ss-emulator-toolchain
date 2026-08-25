@@ -6,8 +6,9 @@
 #define _CPU_H_
 
 #include <cstdint>
+#include <map>
 
-class CPU {
+class Emulator {
 public:
     void execute(uint32_t* instr);
 private:
@@ -21,5 +22,8 @@ private:
     uint32_t status;        // processor status word
     uint32_t handler;       // interrupt routine address
     uint32_t cause;         // interrupt cause
+
+    // memory -- think about this one
+    std::map<uint32_t, uint8_t> mem;
 };
 #endif

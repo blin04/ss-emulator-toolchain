@@ -42,9 +42,9 @@ void ObjectFile::generate() {
         sections.push_back(currentSection);
 
     // file name hardcoded for now
-    std::ofstream out("main.obj", std::ios::out | std::ios::binary);
+    std::ofstream out("main.txt", std::ios::out);
 
-    // symbolTable->serialize(out);
+    symbolTable->serialize(out);
 
     // todo: from sections vector extract
     // data needed for Section Table and
