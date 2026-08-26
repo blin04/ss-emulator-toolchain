@@ -3,28 +3,43 @@
 }
 
 %{
+  #include <stdarg.h>
   #include <stdio.h>
   #include <string.h>
-  
+
   #include "../inc/interface.h"
 
   int yylex();
   void yyerror(const char *);
 
-  // helper function used for parsing
-  // of .extern directive
-  // checks if there is no already defined 
-  // symbol in the given array, since a defined
-  // symbol can't be declared extern 
-  int noDefinedSymbol(char** symbs) {
+  // formats a message with printf-style arguments and forwards
+  // it to yyerror; kept separate from yyerror itself so callers
+  // outside of yyparse (e.g. this file's helper functions) can
+  // still produce a message without needing YYERROR, which is
+  // only valid inside a grammar action
+  void yyerrorf(const char* fmt, ...) {
+    char buf[256];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, args);
+    va_end(args);
+    yyerror(buf);
+  }
+
+  // reports a formatted parse error and aborts yyparse;
+  // only usable directly inside a grammar action, since
+  // YYERROR expands to a jump within yyparse's own body
+  #define PARSE_ERROR(...) do { yyerrorf(__VA_ARGS__); YYERROR; } while (0)
+
+  // helper function used for parsing of .extern directive
+  // returns the first already-defined symbol found in the
+  // given array, or NULL if none are defined, since a defined
+  // symbol can't be declared extern
+  char* firstDefinedSymbol(char** symbs) {
     for (int i = 0; symbs[i] != NULL; i++) {
-      if (isDefined(symbs[i])) {
-        // todo: add symbol name into error message
-        yyerror("defined symbol can't be declared as extern");
-        return 0;
-      }
-    } 
-    return 1;
+      if (isDefined(symbs[i])) return symbs[i];
+    }
+    return NULL;
   }
 
   // analogous to above function, this one
@@ -32,12 +47,7 @@
   // due to implementation details it only takes
   // one symbol as an argument, not the whole array
   int externSymbol(char* symb) {
-    if (isExtern(symb)) {
-      // todo: add symbol name into error message
-      yyerror("definition of a symbol previously declared as extern");
-      return 1;
-    }
-    return 0;
+    return isExtern(symb);
   }
 
   int line_num = 1;
@@ -45,6 +55,11 @@
   int total_offset = 0;         // total offset from the beginning of the file
 
 %}
+
+// makes Bison-detected syntax errors (unexpected token)
+// report which token was unexpected and what was expected,
+// instead of just the generic "syntax error"
+%define parse.error verbose
 
 %union {
   int ival;
@@ -89,27 +104,27 @@
 /* grammar rules */
 
 program: 
-    line { line_num++; }
-  | program NL line { line_num++; }
+    line {  line_num++; printf("parsed %d lines\n", line_num); }
+  | program NL line { line_num++; printf("parsed line %d \n", line_num);}
   ;
 
 line:
     /* empty */
   | directive comment { location_counter += $1; }
   | statement comment { location_counter += 4; }
-  | label comment { 
-      if (externSymbol($1)) YYERROR;
-      defineSymbol($1, location_counter); 
+  | label comment {
+      if (externSymbol($1)) PARSE_ERROR("definition of symbol '%s' previously declared as extern", $1);
+      defineSymbol($1, location_counter);
     }
-  | label directive comment { 
-      if (externSymbol($1)) YYERROR;
-      defineSymbol($1, location_counter); 
-      location_counter += $2; 
+  | label directive comment {
+      if (externSymbol($1)) PARSE_ERROR("definition of symbol '%s' previously declared as extern", $1);
+      defineSymbol($1, location_counter);
+      location_counter += $2;
     }
-  | label statement comment { 
-      if (externSymbol($1)) YYERROR;
-      defineSymbol($1, location_counter); 
-      location_counter += 4; 
+  | label statement comment {
+      if (externSymbol($1)) PARSE_ERROR("definition of symbol '%s' previously declared as extern", $1);
+      defineSymbol($1, location_counter);
+      location_counter += 4;
     }
   | COMMENT
   ;
@@ -128,7 +143,12 @@ directive:
     ASCII STRING { addAsciiDirective($2); $$ = strlen($2) - 2; free($2); }    // -2 because of " and "
   | END { YYACCEPT; /* end parsing successfully */ }
   | EQU SYMBOL COMMA exp { defineSymbol($2, $4, true); $$ = 0;}
-  | EXTERN symbol_list { if (!noDefinedSymbol($2)) { YYERROR; } declareSymbolsExtern($2); $$ = 0; }
+  | EXTERN symbol_list {
+      char* bad = firstDefinedSymbol($2);
+      if (bad) PARSE_ERROR("defined symbol '%s' can't be declared as extern", bad);
+      declareSymbolsExtern($2);
+      $$ = 0;
+    }
   | GLOBAL symbol_list { declareSymbolsGlobal($2); $$ = 0; }
   | SECTION SYMBOL { 
       total_offset += location_counter; 
@@ -309,35 +329,27 @@ data_operand:
       // $$.defined = true;
       $$.symbol = NULL;
     }
-  | LPAR gpr PLUS LITERAL RPAR { 
+  | LPAR gpr PLUS LITERAL RPAR {
       // 12b signed values are [-2^11, 2^11 - 1]
-      if ($4 >= (1 << 11) || $4 < -(1 << 11)) {
-        yyerror("literal value too large: displacement for base register addressing must fit as a signed value in 12b");
-        YYERROR;
-      }
+      if ($4 >= (1 << 11) || $4 < -(1 << 11))
+        PARSE_ERROR("literal value too large: displacement for base register addressing must fit as a signed value in 12b");
 
-      $$.fromMemory = true; 
-      $$.gpr = $2; 
-      $$.disp = $4; 
+      $$.fromMemory = true;
+      $$.gpr = $2;
+      $$.disp = $4;
       // $$.defined = true;
       $$.symbol = NULL;
     }
-  | LPAR gpr PLUS SYMBOL RPAR { 
-      if (!isDefined($4)) {
-        yyerror("unknown symbol value: displacement value for base register addressing must be known during assembling");
-        YYERROR;
-      }
+  | LPAR gpr PLUS SYMBOL RPAR {
+      if (!isDefined($4))
+        PARSE_ERROR("unknown symbol value: displacement value for symbol '%s' must be known during assembling", $4);
 
-      if ((getSymbolValue($4) >= (1 << 11) || 
-        getSymbolValue($4) < -(1 << 11))) {
+      if (getSymbolValue($4) >= (1 << 11) || getSymbolValue($4) < -(1 << 11))
+        PARSE_ERROR("symbol value too large: displacement for symbol '%s' must fit as a signed value in 12b", $4);
 
-        yyerror("symbol value too large: displacement for base register addressing must fit as a signed value in 12b");
-        YYERROR;
-      }
-
-      $$.fromMemory = true; 
-      $$.gpr = $2; 
-      $$.disp = getSymbolValue($4); 
+      $$.fromMemory = true;
+      $$.gpr = $2;
+      $$.disp = getSymbolValue($4);
       // $$.absolute = isAbsolute($4);
       $$.symbol = strdup($4);
     }
@@ -368,8 +380,5 @@ csr:
 %%
 
 void yyerror(const char* c) {
-  printf("Parse error: %s\n", c);
-
-  // causes seg fault for some reason: 
-  // printf("(token value %s, at line number %d) \n", yylval, line_num);
+  fprintf(stderr, "Parse error (line %d): %s\n", line_num, c);
 }

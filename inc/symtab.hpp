@@ -25,8 +25,7 @@ public:
     bool isAbsolute(std::string symbol);
     bool isDefined(std::string symbol);
     bool isExtern(std::string symbol);
-    void print(std::ostream& out = std::cout);
-    void serialize(std::ofstream& out);
+    void serialize(std::ostream& out);
 private:
     typedef struct {
         std::string name;

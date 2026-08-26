@@ -21,7 +21,6 @@ typedef struct operand {
 
 // Functions
 
-void addDirective();
 void addAsciiDirective(const char* str);
 void addSkipDirective(int bytes_count);
 int addWordDirective(char** initializers);

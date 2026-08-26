@@ -103,13 +103,8 @@ bool isDefined(const char* symbol) { return ObjectFile::getSymbolTable()->isDefi
 bool isExtern(const char* symbol) { return ObjectFile::getSymbolTable()->isExtern(symbol); }
 
 void startNewSection(const char* name, int offset) {
-    std::cout << "creating section named " << name << "\n";
     ObjectFile::getInstance()->newSection(name, offset);
     location_counter = 0;       // resets the location counter
-}
-
-void addDirective() {
-    std::cout << "called addDirective()\n";
 }
 
 void addAsciiDirective(const char* str) {
@@ -118,7 +113,6 @@ void addAsciiDirective(const char* str) {
 }
 
 void addSkipDirective(int bytes_count) {
-    std::cout << "adding skip directive that skips " << bytes_count << " bytes\n";
     Section* curr = ObjectFile::getCurrentSection();
     curr->addLine(new SkipDirective(bytes_count));
 }

@@ -21,20 +21,6 @@ void SymbolTable::addEntry(std::string name, int sectionId, int value, SymbolTyp
     symbols[name] = e;
 }
 
-void SymbolTable::serialize(std::ofstream& out) {
-    Entry* e;
-    for (auto& symb : symbols) {
-        e = symb.second;
-        // serialize name
-        char name[32];
-        e->name.copy(name, 32, 0);
-        for (int i = 0; i < 32; i++) out << (uint8_t)name[i];
-        out << (uint8_t)e->section;
-        out << e->value;
-        out << e->type;
-    }
-}
-
 void SymbolTable::defineSymbol(std::string name, int sectionId, int offset, SymbolType type) {
     if (symbols.count(name)) {
         // if symbol is already present in the table it means
@@ -101,7 +87,7 @@ int SymbolTable::getSymbolIndex(std::string symbol) {
     return -1;
 }
 
-void SymbolTable::print(std::ostream& out) {
+void SymbolTable::serialize(std::ostream& out) {
     int nameWidth = 4;
     for (const auto& symb : symbols) {
         if (symb.second->name.size() > nameWidth) nameWidth = symb.second->name.size();

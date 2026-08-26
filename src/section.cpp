@@ -173,13 +173,13 @@ void Section::serialize(std::ofstream& out) {
     bool newline = false;
     out << "#." << name << "\n";
     for (int i = 0; i < section_bytes.size(); i += 4) {
-        out << std::hex << std::setw(2) << section_bytes[i];
+        out << std::hex << std::setw(2) << (int)section_bytes[i];
         out << " ";
-        out << std::hex << std::setw(2) << section_bytes[i + 1];
+        out << std::hex << std::setw(2) << (int)section_bytes[i + 1];
         out << " ";
-        out << std::hex << std::setw(2) << section_bytes[i + 2];
+        out << std::hex << std::setw(2) << (int)section_bytes[i + 2];
         out << " ";
-        out << std::hex << std::setw(2) << section_bytes[i + 3];
+        out << std::hex << std::setw(2) << (int)section_bytes[i + 3];
         if (newline) out << "\n";
         else out << "    ";
         newline = !newline;
@@ -193,13 +193,13 @@ void Section::serialize(std::ofstream& out) {
     // write literal pool contents to output
     out << "#." << name << ".litpool\n";
     for (int i = 0; i < litpool_bytes.size(); i += 4) {
-        out << std::hex << std::setw(2) << litpool_bytes[i];
+        out << std::hex << std::setw(2) << (int)litpool_bytes[i];
         out << " ";
-        out << std::hex << std::setw(2) << litpool_bytes[i + 1];
+        out << std::hex << std::setw(2) << (int)litpool_bytes[i + 1];
         out << " ";
-        out << std::hex << std::setw(2) << litpool_bytes[i + 2];
+        out << std::hex << std::setw(2) << (int)litpool_bytes[i + 2];
         out << " ";
-        out << std::hex << std::setw(2) << litpool_bytes[i + 3];
+        out << std::hex << std::setw(2) << (int)litpool_bytes[i + 3];
         if (newline) out << "\n";
         else out << "    ";
         newline = !newline;

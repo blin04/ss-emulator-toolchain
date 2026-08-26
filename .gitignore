@@ -2,4 +2,5 @@ build/
 misc/*
 !misc/*.l
 !misc/*.y
-main.obj
+*.obj
+*.txt

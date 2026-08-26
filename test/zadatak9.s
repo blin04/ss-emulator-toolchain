@@ -8,10 +8,10 @@ jmp d
 d: .word d
 st %r10, b
 ld c, %r9
-ld %r8, e
+st %r8, e
 .section data
 .skip 8
-e: .word a-e
+e: .word 10
 .word c
 .word .bss
 a: .word b

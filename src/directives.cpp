@@ -26,7 +26,7 @@ std::vector<uint8_t> WordDirective::generateBytes() {
     std::vector<uint8_t> bytes;
     long value;
     for (int i = 0; i < symbols.size(); i++) {
-        if ((symbols[i][0] - '0') < 10) 
+        if ((symbols[i][0] - '0') < 10 && (symbols[i][0] - '0') >= 0) 
             value = std::stol(symbols[i]);
         else 
             value = (long)ObjectFile::getSymbolTable()->getSymbolValue(symbols[i]);

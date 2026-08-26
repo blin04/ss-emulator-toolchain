@@ -15,7 +15,6 @@ public:
 
     void generate();
     void newSection(std::string name, int offset);
-    void printSymbolTable();
 
     static Section* getCurrentSection();
     static SymbolTable* getSymbolTable();

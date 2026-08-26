@@ -34,6 +34,12 @@ void ObjectFile::newSection(std::string name, int offset) {
     if (currentSection != nullptr)
         sections.push_back(currentSection);
     Section* s = new Section(name, offset); 
+    symbolTable->defineSymbol(
+        name, 
+        s->getSectionID(), 
+        0, 
+        SymbolTable::SYMB_LOC 
+    );
     currentSection = s;
 }
 
@@ -56,5 +62,3 @@ void ObjectFile::generate() {
 
     out.close();
 }
-
-void ObjectFile::printSymbolTable() { std::cout << "Symbol table for file ...: \n"; symbolTable->print(); }
