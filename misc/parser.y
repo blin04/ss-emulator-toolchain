@@ -113,16 +113,16 @@ line:
   | directive comment { location_counter += $1; }
   | statement comment { location_counter += 4; }
   | label comment {
-      if (externSymbol($1)) PARSE_ERROR("definition of symbol '%s' previously declared as extern", $1);
+      // if (externSymbol($1)) PARSE_ERROR("definition of symbol '%s' previously declared as extern", $1);
       defineSymbol($1, location_counter);
     }
   | label directive comment {
-      if (externSymbol($1)) PARSE_ERROR("definition of symbol '%s' previously declared as extern", $1);
+      // if (externSymbol($1)) PARSE_ERROR("definition of symbol '%s' previously declared as extern", $1);
       defineSymbol($1, location_counter);
       location_counter += $2;
     }
   | label statement comment {
-      if (externSymbol($1)) PARSE_ERROR("definition of symbol '%s' previously declared as extern", $1);
+      // if (externSymbol($1)) PARSE_ERROR("definition of symbol '%s' previously declared as extern", $1);
       defineSymbol($1, location_counter);
       location_counter += 4;
     }

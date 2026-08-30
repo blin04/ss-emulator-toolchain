@@ -55,7 +55,7 @@ bool handleOperand(Operand &op) {
         // a relocation entry for a symbol 
         // that's referenced absolutely
         // must be generated
-        if (op.symbol != nullptr && !symtab->isAbsolute(op.symbol)) {
+        if (op.symbol != nullptr) {
             // todo: add relocation entry
             ObjectFile::getCurrentSection()->addRelocation(
                 location_counter,
@@ -74,7 +74,7 @@ void defineSymbol(const char* name, int value, bool equ_defined) {
         name, 
         ObjectFile::getCurrentSection()->getSectionID(), 
         value, 
-        equ_defined ? SymbolTable::SYMB_ABS : SymbolTable::SYMB_LOC
+        SymbolTable::SYMB_LOC
     );
 }
 

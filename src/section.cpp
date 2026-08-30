@@ -106,7 +106,6 @@ int Section::getSectionID() { return index; }
 void Section::serialize(std::ofstream& out) {
     // serialize section
 
-    out << "#." << name << "\n";
     for (Line* l : lines) {
         std::vector<uint8_t> bytes = l->generateBytes();
         for (uint8_t byte : bytes) 
@@ -211,8 +210,6 @@ void Section::serialize(std::ofstream& out) {
     }
 
     // write relocation entries to output
-    out << "#." << name << ".rela\n";
-
     const int offsetWidth = 6;
     const int typeWidth = 5;
     const int symbolWidth = 20;

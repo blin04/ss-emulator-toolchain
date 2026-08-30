@@ -8,16 +8,14 @@
 
 class SymbolTable {
 public:
-    enum SymbolType {
+    enum SymbolBind {
         SYMB_GLOB,
         SYMB_LOC,
-        SYMB_UND,       // extern
-        SYMB_ABS        // .equ defined
     };
 
     ~SymbolTable();
 
-    void defineSymbol(std::string name, int sectionId, int offset, SymbolType type);
+    void defineSymbol(std::string name, int sectionId, int offset, SymbolBind bind);
     void declareSymbolGlobal(std::string symbol);
     void declareSymbolExtern(std::string symbol);
     int getSymbolValue(std::string symbol);
@@ -27,17 +25,19 @@ public:
     bool isExtern(std::string symbol);
     void serialize(std::ostream& out);
 private:
+    const int SYMB_UND = 0;
+
     typedef struct {
         std::string name;
         int         section;
         int         value;          // SYMB_LOC: offset in bytes from section start
-        SymbolType  type;
+        SymbolBind  bind;
         bool        defined;        // says if the symbol's value is known
     } Entry;
 
     std::map<std::string, Entry*> symbols;
 
-    void addEntry(std::string name, int section, int offset, SymbolType type, bool defined);
+    void addEntry(std::string name, int section, int offset, SymbolBind type, bool defined);
 };
 
 #endif
