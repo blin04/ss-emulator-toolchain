@@ -15,7 +15,7 @@ public:
 
     ~SymbolTable();
 
-    void defineSymbol(std::string name, int sectionId, int offset, SymbolBind bind);
+    void defineSymbol(std::string name, int sectionId, int offset, SymbolBind bind, bool equ = false);
     void declareSymbolGlobal(std::string symbol);
     void declareSymbolExtern(std::string symbol);
     int getSymbolValue(std::string symbol);
@@ -33,6 +33,7 @@ private:
         int         section;
         int         value;          // SYMB_LOC: offset in bytes from section start
         SymbolBind  bind;
+        bool        equ;            // equ defined 
         bool        defined;        // says if the symbol's value is known
     } Entry;
 

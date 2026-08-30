@@ -45,7 +45,7 @@ bool handleOperand(Operand &op) {
         // the start of literal pool to the added value
         // this makes it easy to patch it up once the 
         // literal pool start address is known - the
-        // star address only needs to be added to 
+        // start address only needs to be added to 
         // the stored displacement value
         // relocation entry, if needed, is generated 
         // during literal pool serialization
@@ -74,7 +74,8 @@ void defineSymbol(const char* name, int value, bool equ_defined) {
         name, 
         ObjectFile::getCurrentSection()->getSectionID(), 
         value, 
-        SymbolTable::SYMB_LOC
+        SymbolTable::SYMB_LOC,
+        equ_defined
     );
 }
 
@@ -121,16 +122,24 @@ void addSkipDirective(int bytes_count) {
 // for initializers in order to more
 // efficiently update location counter
 int addWordDirective(char** initializers) {
-    Section* curr = ObjectFile::getCurrentSection();
-    std::vector<std::string> initializers_param;
+    Section* sec = ObjectFile::getCurrentSection();
+    SymbolTable* symtab = ObjectFile::getSymbolTable();
+    std::vector<long> params;
 
     int i;
+    long value;
     for (i = 0; initializers[i] != nullptr; i++) {
-        initializers_param.push_back(initializers[i]);
+        if ((initializers[i][0] - '0') < 10 && (initializers[i][0] - '0') >= 0) 
+            value = std::stol(initializers[i]);
+        else {
+            value = (long)ObjectFile::getSymbolTable()->getSymbolValue(initializers[i]);
+            if (!symtab->isDefined(initializers[i]))
+                sec->addForwardReference(initializers[i], location_counter + 4* i);
+        }
+        params.push_back(value);
         free(initializers[i]);
     }
-    WordDirective* w = new WordDirective(initializers_param);
-    curr->addLine(new WordDirective(initializers_param));
+    sec->addLine(new WordDirective(params));
     free(initializers);
     return 4 * i;
 }

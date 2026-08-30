@@ -21,6 +21,7 @@ public:
     void addLine(Line*, bool fromPool = false);
     // returns index of the added value in the pool
     int addLiteralPoolValue(int value, const char* symbol);
+    void addForwardReference(std::string symbol, int location);
     void backpatch();
     int getSectionID();
     void serialize(std::ofstream& file);

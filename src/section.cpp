@@ -61,6 +61,10 @@ int Section::addRelocation(int offset, RelocType type , int symbolIndex, int add
     return relocations.size() - 1;
 }
 
+void Section::addForwardReference(std::string symbol, int location) {
+    freftab[symbol].push_back(location);
+}
+
 void Section::backpatch() {
     // for each entry in forward reference table:
     //      if entry.symbol is defined:

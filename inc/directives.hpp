@@ -23,10 +23,10 @@ private:
 
 class WordDirective : public Line {
 public:
-    WordDirective(std::vector<std::string> symbols);
+    WordDirective(std::vector<long> values);
     std::vector<uint8_t> generateBytes();
 private:
-    std::vector<std::string> symbols;
+    std::vector<long> values;
 };
 
 #endif

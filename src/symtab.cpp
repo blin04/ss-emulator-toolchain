@@ -26,7 +26,7 @@ void SymbolTable::addEntry(std::string name, int sectionId, int value, SymbolBin
     symbols[name] = e;
 }
 
-void SymbolTable::defineSymbol(std::string name, int sectionId, int offset, SymbolBind bind) {
+void SymbolTable::defineSymbol(std::string name, int sectionId, int offset, SymbolBind bind, bool equ) {
     if (symbols.count(name)) {
         // if symbol is already present in the table it means
         // that it was mentioned in a directive or statement
@@ -48,11 +48,11 @@ bool SymbolTable::isDefined(std::string symbol) {
 
 // symbol is absolute if it was
 // defined with .equ directive
-/* bool SymbolTable::isAbsolute(std::string symbol) {
+bool SymbolTable::isAbsolute(std::string symbol) {
     if (symbols.count(symbol))
-        return symbols[symbol]->bind == SYMB_ABS;
+        return symbols[symbol]->equ;
     return false;
-} */
+}
 
 bool SymbolTable::isExtern(std::string symbol) {
     if (symbols.count(symbol))
