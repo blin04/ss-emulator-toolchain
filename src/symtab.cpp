@@ -7,6 +7,8 @@
 #include <string>
 #include <cstdint>
 
+int SymbolTable::symbol_index = 1;
+
 SymbolTable::~SymbolTable() {
     for (auto it = symbols.begin(); it != symbols.end(); it++) {
         delete it->second;
@@ -15,6 +17,7 @@ SymbolTable::~SymbolTable() {
 
 void SymbolTable::addEntry(std::string name, int sectionId, int value, SymbolBind bind, bool defined) {
     Entry* e = new Entry();
+    e->index = symbol_index++;
     e->name = name;
     e->section = sectionId;
     e->value = value;
@@ -95,7 +98,8 @@ int SymbolTable::getSymbolValue(std::string symbol) {
 }
 
 int SymbolTable::getSymbolIndex(std::string symbol) {
-    // only a placeholder for now
+    if (symbols.count(symbol)) 
+        return symbols[symbol]->index;
     return -1;
 }
 
@@ -106,6 +110,7 @@ void SymbolTable::serialize(std::ostream& out) {
     }
 
 
+    const int indexWidth = 6;
     const int sectionWidth = 10;
     const int valueWidth = 6;
     const int typeWidth = 5;
@@ -113,6 +118,7 @@ void SymbolTable::serialize(std::ostream& out) {
 
     out << "#.symtab\n";
     out << std::left
+        << std::setw(indexWidth) << "Index" << " | "
         << std::setw(nameWidth) << "Name" << " | "
         << std::setw(sectionWidth) << "Section ID" << " | "
         << std::setw(valueWidth) << "Value" << " | "
@@ -125,6 +131,7 @@ void SymbolTable::serialize(std::ostream& out) {
         if (symb.second->bind == SYMB_GLOB) bind = "GLOB";
 
         out << std::left
+            << std::setw(indexWidth) << symb.second->index << " | "
             << std::setw(nameWidth) << symb.second->name << " | ";
 
         if (symb.second->section != SYMB_UND)

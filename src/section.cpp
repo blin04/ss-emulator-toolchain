@@ -212,7 +212,7 @@ void Section::serialize(std::ofstream& out) {
     // write relocation entries to output
     const int offsetWidth = 6;
     const int typeWidth = 5;
-    const int symbolWidth = 20;
+    const int symbolWidth = 10;
     const int addendWidth = 10;
 
     out << "#." << name << ".rela\n";

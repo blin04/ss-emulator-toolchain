@@ -28,6 +28,7 @@ private:
     const int SYMB_UND = 0;
 
     typedef struct {
+        int         index;
         std::string name;
         int         section;
         int         value;          // SYMB_LOC: offset in bytes from section start
@@ -38,6 +39,8 @@ private:
     std::map<std::string, Entry*> symbols;
 
     void addEntry(std::string name, int section, int offset, SymbolBind type, bool defined);
+
+    static int symbol_index;
 };
 
 #endif
