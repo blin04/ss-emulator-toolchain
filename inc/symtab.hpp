@@ -20,6 +20,7 @@ public:
     void declareSymbolExtern(std::string symbol);
     int getSymbolValue(std::string symbol);
     int getSymbolIndex(std::string symbol);
+    SymbolBind getSymbolBind(std::string symbol);
     bool isAbsolute(std::string symbol);
     bool isDefined(std::string symbol);
     bool isExtern(std::string symbol);
@@ -39,7 +40,7 @@ private:
 
     std::map<std::string, Entry*> symbols;
 
-    void addEntry(std::string name, int section, int offset, SymbolBind type, bool defined);
+    void addEntry(std::string name, int section, int offset, SymbolBind type, bool defined, bool equ);
 
     static int symbol_index;
 };

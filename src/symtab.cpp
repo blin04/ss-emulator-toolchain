@@ -15,7 +15,7 @@ SymbolTable::~SymbolTable() {
     }
 }
 
-void SymbolTable::addEntry(std::string name, int sectionId, int value, SymbolBind bind, bool defined) {
+void SymbolTable::addEntry(std::string name, int sectionId, int value, SymbolBind bind, bool defined, bool equ) {
     Entry* e = new Entry();
     e->index = symbol_index++;
     e->name = name;
@@ -23,6 +23,7 @@ void SymbolTable::addEntry(std::string name, int sectionId, int value, SymbolBin
     e->value = value;
     e->bind = bind;
     e->defined = defined;
+    e->equ = equ;
     symbols[name] = e;
 }
 
@@ -33,8 +34,9 @@ void SymbolTable::defineSymbol(std::string name, int sectionId, int offset, Symb
         symbols[name]->section = sectionId;
         symbols[name]->value = offset;
         symbols[name]->defined = true;
+        symbols[name]->equ = equ;
     }
-    else addEntry(name, sectionId, offset, bind, true);
+    else addEntry(name, sectionId, offset, bind, true, equ);
 }
 
 // symbol is defined if it was defined in code 
@@ -62,13 +64,13 @@ bool SymbolTable::isExtern(std::string symbol) {
 
 void SymbolTable::declareSymbolGlobal(std::string name) { 
     if (symbols.count(name) == 0) 
-        addEntry(name, SYMB_UND, 0, SYMB_GLOB, false);
+        addEntry(name, SYMB_UND, 0, SYMB_GLOB, false, false);
     else symbols[name]->bind = SYMB_GLOB; 
 }
 
 void SymbolTable::declareSymbolExtern(std::string name) { 
     if (symbols.count(name) == 0) 
-        addEntry(name, 0, SYMB_UND, SYMB_GLOB, false); 
+        addEntry(name, 0, SYMB_UND, SYMB_GLOB, false, false); 
     else symbols[name]->section = SYMB_UND; 
 }
 
@@ -92,6 +94,7 @@ int SymbolTable::getSymbolValue(std::string symbol) {
             ObjectFile::getCurrentSection()->getSectionID(), 
             0, 
             SYMB_LOC, 
+            false,
             false
         );
     return symbols[symbol]->value; 
@@ -101,6 +104,13 @@ int SymbolTable::getSymbolIndex(std::string symbol) {
     if (symbols.count(symbol)) 
         return symbols[symbol]->index;
     return -1;
+}
+
+SymbolTable::SymbolBind SymbolTable::getSymbolBind(std::string symbol) {
+    if (symbols.count(symbol))
+        return symbols[symbol]->bind;
+    // not the best logic but will work
+    return SYMB_LOC;
 }
 
 void SymbolTable::serialize(std::ostream& out) {

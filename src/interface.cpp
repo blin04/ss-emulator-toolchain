@@ -63,6 +63,8 @@ bool handleOperand(Operand &op) {
                 symtab->getSymbolIndex(op.symbol),
                 0 
             ); 
+            // note: I think this branch is never
+            // actually entered, must be checked
         }
     }
     return fromPool;
@@ -132,6 +134,7 @@ int addWordDirective(char** initializers) {
         if ((initializers[i][0] - '0') < 10 && (initializers[i][0] - '0') >= 0) 
             value = std::stol(initializers[i]);
         else {
+            // note: used for adding symbol into the table as undefined
             value = (long)ObjectFile::getSymbolTable()->getSymbolValue(initializers[i]);
             if (!symtab->isDefined(initializers[i]))
                 sec->addForwardReference(initializers[i], location_counter + 4* i);

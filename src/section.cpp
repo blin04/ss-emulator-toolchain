@@ -2,6 +2,7 @@
 #include "../inc/objfile.hpp"
 #include "../inc/section.hpp"
 #include "../inc/symtab.hpp"
+#include "../inc/interface.h"
 
 #include <iostream>
 #include <iomanip>
@@ -46,6 +47,12 @@ int Section::addLiteralPoolValue(int value, const char* symbol) {
     e->symbol = (symbol != nullptr ? symbol : "");
     literalPool.push_back(e);
 
+    // if symbol isn't absolute, add a 
+    // foward reference table entry
+    SymbolTable* symtab = ObjectFile::getSymbolTable();
+    if (!symtab->isAbsolute(e->symbol)) 
+        addForwardReference(e->symbol, location_counter);
+
     int idx = literalPool.size() - 1;
     literalPoolIndex[key] = idx;
     return idx;
@@ -74,14 +81,11 @@ void Section::backpatch() {
     SymbolTable* symtab = ObjectFile::getSymbolTable();
     for (auto& e : freftab) {
         std::string symbol = e.first;
-        bool defined = symtab->isDefined(symbol);
         int value = 0;
 
-        if (defined) value = symtab->getSymbolValue(symbol);
-        else symtab->declareSymbolExtern(symbol);
-
         for (int i = 0; i < e.second.size(); i++) {
-            if (value) {
+            value = symtab->getSymbolValue(symbol);
+            if (symtab->isAbsolute(symbol)) {
                 // b4 | b3 | b2 | b1
                 int b1 = value & 0xff;
                 int b2 = (value >> 8) & 0xff;
@@ -94,12 +98,26 @@ void Section::backpatch() {
                 section_bytes[e.second[i] + 3] = b1;
             }
             else {
-                addRelocation(
-                    e.second[i],
-                    ABS,
-                    symtab->getSymbolIndex(symbol),
-                    0
-                );
+                if (!symtab->isDefined(symbol))
+                    symtab->declareSymbolExtern(symbol);
+
+                if (symtab->getSymbolBind(symbol) == SymbolTable::SYMB_GLOB) {
+                    addRelocation(
+                        e.second[i],
+                        ABS,
+                        symtab->getSymbolIndex(symbol),
+                        0
+                    );
+                }
+                else {
+                    addRelocation(
+                        e.second[i],
+                        REL,
+                        symtab->getSymbolIndex(this->name),
+                        // symtab->getSymbolIndex(symbol),
+                        value 
+                    );
+                }
             }
         }
     }
@@ -219,7 +237,7 @@ void Section::serialize(std::ofstream& out) {
     const int symbolWidth = 10;
     const int addendWidth = 10;
 
-    out << "#." << name << ".rela\n";
+    out << std::dec << "#." << name << ".rela\n";
     out << std::left
         << std::setw(offsetWidth) << "Offset" << " | "
         << std::setw(typeWidth) << "Type" << " | "
