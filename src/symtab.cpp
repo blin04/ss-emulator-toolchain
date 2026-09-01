@@ -2,9 +2,11 @@
 #include "../inc/section.hpp"
 #include "../inc/symtab.hpp"
 
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <string>
+#include <vector>
 #include <cstdint>
 
 int SymbolTable::symbol_index = 1;
@@ -135,23 +137,33 @@ void SymbolTable::serialize(std::ostream& out) {
         << std::setw(typeWidth) << "Bind" << " | "
         << std::setw(definedWidth) << "Defined?" << "\n";
 
+    std::vector<const Entry*> orderedSymbols;
     for (const auto& symb : symbols) {
+        orderedSymbols.push_back(symb.second);
+    }
+
+    std::sort(orderedSymbols.begin(), orderedSymbols.end(),
+        [](const Entry* lhs, const Entry* rhs) {
+            return lhs->index < rhs->index;
+        });
+
+    for (const auto* symb : orderedSymbols) {
         std::string bind = "LOC";
-        // if (symb.second->bind == SYMB_ABS) bind = "ABS";
-        if (symb.second->bind == SYMB_GLOB) bind = "GLOB";
+        // if (symb->bind == SYMB_ABS) bind = "ABS";
+        if (symb->bind == SYMB_GLOB) bind = "GLOB";
 
         out << std::left
-            << std::setw(indexWidth) << symb.second->index << " | "
-            << std::setw(nameWidth) << symb.second->name << " | ";
+            << std::setw(indexWidth) << symb->index << " | "
+            << std::setw(nameWidth) << symb->name << " | ";
 
-        if (symb.second->section != SYMB_UND)
-            out << std::setw(sectionWidth) << symb.second->section;
-        else 
+        if (symb->section != SYMB_UND)
+            out << std::setw(sectionWidth) << symb->section;
+        else
             out << std::setw(sectionWidth) << "UND";
         out << " | ";
 
-        out << std::setw(valueWidth) << symb.second->value << " | "
+        out << std::setw(valueWidth) << symb->value << " | "
             << std::setw(typeWidth) << bind << " | "
-            << std::setw(definedWidth) << (symb.second->defined ? "yes" : "no") << "\n";
+            << std::setw(definedWidth) << (symb->defined ? "yes" : "no") << "\n";
     }
 }

@@ -12,62 +12,45 @@
 int location_counter = 0;
 
 bool handleOperand(Operand &op) {
+    // an operand might be a `data_operand` or a `jump_operand`
+    // in any case, it might reference a literal, a symbol 
+    // or none of them
+
+    // value of literals and symbols might be directly 
+    // encoded into the instruction's displacement field
+    // or it might be placed into the literal pool, with
+    // the instruction accessing it using PC relative 
+    // addressing
+    //
+    // direct encoding is performed *only* in the 
+    // following situations:
+    //  > literal - the value fits into 12b
+    //  > symbol - it's absolute (.equ defined)
+    //             and it's vlaue fits into 12b
+    // in that case, no action is required from
+    // this function
+    //
+    // in all the other cases, the value is placed
+    // into the literal pool
+
+    bool fits = (op.disp >= 2048 || op.disp < -2048);
     SymbolTable* symtab = ObjectFile::getSymbolTable();
-    bool fromPool = false;
 
-    // if the value of the symbol can in any way
-    // (it's not absolute or it's not defined) exceed 
-    // 12b, the symbol gets added to the literal pool
+    if ((op.symbol == nullptr && fits) 
+        || (op.symbol != nullptr && symtab->isAbsolute(op.symbol) && fits))
+        return false;
 
-    // forward reference table entry is generated
-    // for symbols that are not defined
 
-    // relocation entry is generated
-    // for symbols that aren't absolute
-
-    if (op.symbol != nullptr && !symtab->isDefined(op.symbol)) {
-        // symbol isn't defined, so it's entirely possible
-        // that is runtime value exceeds 12b
-        fromPool = true;        
-    }
-    else {
-        // branch is entered if either a defined symbol 
-        // or a literal are encountered
-        // the corresponding value is stored in `disp` field
-        // if disp can't fit into 12b, it must be stored in
-        // literal pool 
-        if (op.disp >= 2048 || op.disp < -2048) 
-            fromPool = true;
-    }
-
-    if (fromPool) {
-        // `disp` field equals to offset in bytes from 
-        // the start of literal pool to the added value
-        // this makes it easy to patch it up once the 
-        // literal pool start address is known - the
-        // start address only needs to be added to 
-        // the stored displacement value
-        // relocation entry, if needed, is generated 
-        // during literal pool serialization
-        op.disp = ObjectFile::getCurrentSection()->addLiteralPoolValue(op.disp, op.symbol) * 4;
-    }
-    else {
-        // a relocation entry for a symbol 
-        // that's referenced absolutely
-        // must be generated
-        if (op.symbol != nullptr) {
-            // todo: add relocation entry
-            ObjectFile::getCurrentSection()->addRelocation(
-                location_counter,
-                RelocType::ABS,
-                symtab->getSymbolIndex(op.symbol),
-                0 
-            ); 
-            // note: I think this branch is never
-            // actually entered, must be checked
-        }
-    }
-    return fromPool;
+    // `disp` field equals to offset in bytes from 
+    // the start of literal pool to the added value
+    // this makes it easy to patch it up once the 
+    // literal pool start address is known - the
+    // start address only needs to be added to 
+    // the stored displacement value
+    // relocation entry, if needed, is generated 
+    // during literal pool serialization
+    op.disp = ObjectFile::getCurrentSection()->addLiteralPoolValue(op.disp, op.symbol) * 4;
+    return true;
 }
 
 // defines symbol with a particular value

@@ -35,7 +35,7 @@ private:
         int         value;          // SYMB_LOC: offset in bytes from section start
         SymbolBind  bind;
         bool        equ;            // equ defined 
-        bool        defined;        // says if the symbol's value is known
+        bool        defined;        // symbol's value was defined (label or .equ)
     } Entry;
 
     std::map<std::string, Entry*> symbols;
