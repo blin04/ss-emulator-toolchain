@@ -15,8 +15,6 @@ Section::Section(std::string sectionName, int offset)
     , name(sectionName)
     , offset(offset)
     , startAddress(0) {
-    std::cout << "SectionTable[" << index << "]: created " << name << " at " << offset << "B from the start\n";
-    ObjectFile::getSymbolTable()->defineSymbol(sectionName, index, 0, SymbolTable::SYMB_LOC);
 }
 
 Section::~Section() {
@@ -110,10 +108,12 @@ void Section::backpatch() {
                     );
                 }
                 else {
+                    int symb_sec_id = symtab->getSymbolSection(symbol);
+                    std::string symb_sec_name = ObjectFile::getSectionFromID(symb_sec_id);
                     addRelocation(
                         e.second[i],
                         REL,
-                        symtab->getSymbolIndex(this->name),
+                        symtab->getSymbolIndex(symb_sec_name),
                         // symtab->getSymbolIndex(symbol),
                         value 
                     );
@@ -124,6 +124,8 @@ void Section::backpatch() {
 }
 
 int Section::getSectionID() { return index; }
+
+std::string Section::getSectionName() { return name; }
 
 void Section::serialize(std::ofstream& out) {
     // serialize section

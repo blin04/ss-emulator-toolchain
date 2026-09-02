@@ -24,6 +24,7 @@ public:
     void addForwardReference(std::string symbol, int location);
     void backpatch();
     int getSectionID();
+    std::string getSectionName();
     void serialize(std::ofstream& file);
 private:
 

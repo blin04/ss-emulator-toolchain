@@ -29,13 +29,17 @@ Section* ObjectFile::getCurrentSection() {
 SymbolTable* ObjectFile::getSymbolTable() {
     return getInstance()->symbolTable;
 }
+
+std::string ObjectFile::getSectionFromID(int id) {
+    return getInstance()->sections[id - 1]->getSectionName();
+}
  
 void ObjectFile::newSection(std::string name, int offset) {
     if (currentSection != nullptr)
         sections.push_back(currentSection);
-    Section* s = new Section(name, offset); 
+    Section* s = new Section("." + name, offset); 
     symbolTable->defineSymbol(
-        name, 
+        "." + name, 
         s->getSectionID(), 
         0, 
         SymbolTable::SYMB_LOC 

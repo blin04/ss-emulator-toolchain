@@ -19,6 +19,7 @@ public:
     static Section* getCurrentSection();
     static SymbolTable* getSymbolTable();
     static ObjectFile* getInstance();
+    static std::string getSectionFromID(int id);
 private:
     ObjectFile();
 

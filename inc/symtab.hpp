@@ -18,9 +18,10 @@ public:
     void defineSymbol(std::string name, int sectionId, int offset, SymbolBind bind, bool equ = false);
     void declareSymbolGlobal(std::string symbol);
     void declareSymbolExtern(std::string symbol);
-    int getSymbolValue(std::string symbol);
-    int getSymbolIndex(std::string symbol);
     SymbolBind getSymbolBind(std::string symbol);
+    int getSymbolIndex(std::string symbol);
+    int getSymbolSection(std::string symbol);
+    int getSymbolValue(std::string symbol);
     bool isAbsolute(std::string symbol);
     bool isDefined(std::string symbol);
     bool isExtern(std::string symbol);

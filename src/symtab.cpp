@@ -115,6 +115,13 @@ SymbolTable::SymbolBind SymbolTable::getSymbolBind(std::string symbol) {
     return SYMB_LOC;
 }
 
+int SymbolTable::getSymbolSection(std::string symbol) {
+    if (symbols.count(symbol)) 
+        return symbols[symbol]->section;
+    return -1;
+}
+
+
 void SymbolTable::serialize(std::ostream& out) {
     int nameWidth = 4;
     for (const auto& symb : symbols) {
