@@ -47,7 +47,7 @@ private:
     // section contents in bytes
     std::vector<uint8_t> section_bytes;
 
-    // list of indexes of instructions that access 
+    // list of **indexes** of instructions that access 
     // symbols in literal pool with pc relative addressing 
     std::vector<int> dispFixupIndexes;
     // table for symbols that are forward referenced

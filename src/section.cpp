@@ -149,8 +149,14 @@ void Section::serialize(std::ofstream& out) {
         // displacement field is the lowest 12b 
         // of an instruction
 
-        // section_bytes[4*k] | section_bytes[4*k + 1] | section_bytes[4*k + 2] | section_bytes[4*k + 3]
-        int disp = ((section_bytes[4 * ind + 2] & 0xf) << 8) + section_bytes[4 * ind + 3] + litpool_start;
+        // instruction format:
+        //  > section_bytes[4*k] | section_bytes[4*k + 1] | section_bytes[4*k + 2] | section_bytes[4*k + 3]
+
+        int disp = ((section_bytes[4 * ind + 2] & 0xf) << 8) + section_bytes[4 * ind + 3]       // offset in literal pool
+                    + (litpool_start - 4 * ind)                 // distance from the instruction to literal pool
+                    - 4;                                        // when executing PC points to next instruction
+
+
         section_bytes[4 * ind + 3] = disp & 0xff;
 
         section_bytes[4 * ind + 2] &= 0xf0;         // clear lower 4 bits
