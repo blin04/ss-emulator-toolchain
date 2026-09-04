@@ -6,10 +6,11 @@
 #include "../inc/section.hpp"
 #include "../inc/symtab.hpp"
 
-ObjectFile::ObjectFile() {
-    currentSection = nullptr;
-    symbolTable = new SymbolTable();
-}
+ObjectFile::ObjectFile() 
+    : currentSection(nullptr)
+    , symbolTable(new SymbolTable()) 
+    , outputPath("asm_out.txt") 
+    {}
 
 ObjectFile::~ObjectFile() {
     for (int i = 0; i < sections.size(); i++)
@@ -52,7 +53,7 @@ void ObjectFile::generate() {
         sections.push_back(currentSection);
 
     // file name hardcoded for now
-    std::ofstream out("out.txt", std::ios::out);
+    std::ofstream out(outputPath, std::ios::out);
 
     symbolTable->serialize(out);
 
@@ -65,4 +66,8 @@ void ObjectFile::generate() {
     }
 
     out.close();
+}
+
+void ObjectFile::setOutput(std::string path) {
+    outputPath = path;
 }

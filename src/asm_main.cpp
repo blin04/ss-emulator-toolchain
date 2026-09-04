@@ -6,20 +6,24 @@
 extern FILE* yyin;
 extern void yyparse();
 
+// ./asembler [-o <output_file>] input_file
 int main(int argc, char** argv) {
-    if (argc != 2) {
-        return 1;
-    }
+    ObjectFile* output = ObjectFile::getInstance();
 
     std::string filename = argv[1];
+    if (filename == "-o") {
+        output->setOutput(argv[2]);
+        filename = argv[3];
+    } 
+
+    // temporarily reading from test directory 
     std::string path = "./test/" + filename;
+
     FILE* file = fopen(path.c_str(), "r");
     if (!file) {
         std::cout << "error: failed opening source file\n";
         return 1;
     }
-
-    ObjectFile* output = ObjectFile::getInstance();
 
     yyin = file;
     yyparse();
