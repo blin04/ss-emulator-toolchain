@@ -15,6 +15,7 @@ public:
 
     void generate();
     void newSection(std::string name, int offset);
+    void setOutput(std::string path);
 
     static Section* getCurrentSection();
     static SymbolTable* getSymbolTable();
@@ -23,9 +24,10 @@ public:
 private:
     ObjectFile();
 
-    Section* currentSection;
-    std::vector<Section*> sections;
-    SymbolTable* symbolTable;
+    Section*                    currentSection;
+    std::vector<Section*>       sections;
+    SymbolTable*                symbolTable;
+    std::string                 outputPath;
 };
 
 #endif
