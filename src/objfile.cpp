@@ -52,7 +52,7 @@ void ObjectFile::generate() {
         sections.push_back(currentSection);
 
     // file name hardcoded for now
-    std::ofstream out("main.txt", std::ios::out);
+    std::ofstream out("out.txt", std::ios::out);
 
     symbolTable->serialize(out);
 
