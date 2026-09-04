@@ -200,7 +200,7 @@ void Section::serialize(std::ofstream& out) {
 
     // write section contents to output
     bool newline = false;
-    out << "#." << name << "\n";
+    out << "#" << name << "\n";
     int size = section_bytes.size();
     for (int i = 0; i < size; i += 4) {
         out << std::hex << std::setw(2) << (int)section_bytes[i] << " ";
@@ -224,7 +224,7 @@ void Section::serialize(std::ofstream& out) {
     }
 
     // write literal pool contents to output
-    out << "#." << name << ".litpool\n";
+    out << "#" << name << ".litpool\n";
     for (int i = 0; i < litpool_bytes.size(); i += 4) {
         out << std::hex << std::setw(2) << (int)litpool_bytes[i];
         out << " ";
@@ -249,7 +249,7 @@ void Section::serialize(std::ofstream& out) {
     const int symbolWidth = 10;
     const int addendWidth = 10;
 
-    out << std::dec << "#." << name << ".rela\n";
+    out << std::dec << "#" << name << ".rela\n";
     out << std::left
         << std::setw(offsetWidth) << "Offset" << " | "
         << std::setw(typeWidth) << "Type" << " | "

@@ -7,7 +7,7 @@ ASM_SOURCES = src/asm_main.cpp src/directives.cpp src/instruction.cpp src/objfil
 OUTPUT = build/asembler
 
 LINKER_HEADERS = inc/linker.hpp inc/linkfile.hpp inc/linksymtab.hpp inc/linksection.hpp inc/objreader.hpp
-LINKER_SOURCES = src/linker_main.cpp src/linker.cpp src/linksymtab.cpp src/objreader.cpp
+LINKER_SOURCES = src/linker_main.cpp src/linker.cpp src/linksymtab.cpp src/objreader.cpp src/linkfile.cpp
 LINKER_OUTPUT = build/linker
 
 .DEFAULT_GLOBAL = all

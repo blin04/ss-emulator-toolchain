@@ -5,7 +5,6 @@
 
 int main(int argc, char** argv) {
     std::string outputPath = "out_link.txt";
-    bool relocatable = false;
     Linker* linker = Linker::getInstance();
 
     for (int i = 1; i < argc; i++) {

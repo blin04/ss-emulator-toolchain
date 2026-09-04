@@ -9,13 +9,13 @@
 // #.<section> / #.<section>.litpool / #.<section>.rela text format
 // written by SymbolTable::serialize / Section::serialize) back into
 // a LinkFile. The inverse operation of those two serialize methods.
+//
+// Everything else (LineCursor, per-block parse helpers) is an
+// implementation detail confined to objreader.cpp - nothing besides
+// this one entry point is part of the contract.
 class ObjReader {
 public:
     static LinkFile parse(const std::string& path);
-
-private:
-    // todo: split into parseSymtab(), parseSection(), parseLitpool(),
-    // parseRela() helpers, one per '#.' block in the file
 };
 
 #endif

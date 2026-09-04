@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include "section.hpp"      // RelocType
 #include "symtab.hpp"       // SymbolTable::SymbolBind
@@ -30,22 +31,28 @@ public:
         bool                    defined;
     };
 
-    struct RelaEntry {
+    struct RelocEntry {
         int         offset;
         RelocType   type;
-        int         symbolIndex;   // -> LocalSymbol::index, per-file scoped
+        int         symbol;             // -> LocalSymbol::index, per-file scoped
         int         addend;
     };
 
     struct RawSection {
         std::string             name;
         std::vector<uint8_t>    bytes;   // code/data bytes + literal pool bytes
-        std::vector<RelaEntry>  relas;
+        std::vector<RelocEntry> relas;
     };
 
-    std::string                sourceFilename;
-    std::vector<LocalSymbol>   symbols;
-    std::vector<RawSection>    sections;
+    std::string                 sourceFilename;
+    std::vector<LocalSymbol>    symbols;
+    std::vector<RawSection>     sections;
+
+    // debug purposes
+    void print();
+private:
+    void printSection(RawSection section);
+    void printSymTab();
 };
 
 #endif

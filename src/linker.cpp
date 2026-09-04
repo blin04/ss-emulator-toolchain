@@ -1,4 +1,6 @@
 #include "../inc/linker.hpp"
+#include "../inc/objreader.hpp"
+#include "../inc/linkfile.hpp"
 
 Linker::Linker() 
     : outputMode(OutputMode::UNSET) {}
@@ -59,10 +61,23 @@ void Linker::link() {
         applyRelocations();
         emitHexDump();
     }
+
+    // debug: printing files
+    std::cout << "\n====================== parsed files ======================\n";
+    for (LinkFile file : files) {
+        std::cout << "\n";
+        file.print();
+        std::cout << "\n";
+    }
 }
 
 void Linker::parseInputs() {
     // todo: ObjReader::parse() every path in inputPaths into `files`
+    LinkFile file;
+    for (const std::string& path : inputPaths) {
+        file = ObjReader::parse(path);
+        files.push_back(file);
+    }
 }
 
 void Linker::mergeSections() {
