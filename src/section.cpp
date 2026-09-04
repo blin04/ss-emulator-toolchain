@@ -48,7 +48,7 @@ int Section::addLiteralPoolValue(int value, const char* symbol) {
     // if symbol isn't absolute, add a 
     // foward reference table entry
     SymbolTable* symtab = ObjectFile::getSymbolTable();
-    if (!symtab->isAbsolute(e->symbol)) 
+    if (symbol != nullptr && !symtab->isAbsolute(e->symbol)) 
         addForwardReference(e->symbol, location_counter);
 
     int idx = literalPool.size() - 1;
@@ -177,8 +177,8 @@ void Section::serialize(std::ofstream& out) {
     SymbolTable* symtab = ObjectFile::getSymbolTable();
     for (int i = 0; i < literalPool.size(); i++) {
         LitPoolEntry* l = literalPool[i];
-        
-        if (!symtab->isDefined(l->symbol)) {
+
+        if (!l->symbol.empty() && !symtab->isDefined(l->symbol)) {
             addRelocation(
                 litpool_start + 4*i,
                 RelocType::ABS,
@@ -201,16 +201,20 @@ void Section::serialize(std::ofstream& out) {
     // write section contents to output
     bool newline = false;
     out << "#." << name << "\n";
-    for (int i = 0; i < section_bytes.size(); i += 4) {
-        out << std::hex << std::setw(2) << (int)section_bytes[i];
-        out << " ";
-        out << std::hex << std::setw(2) << (int)section_bytes[i + 1];
-        out << " ";
-        out << std::hex << std::setw(2) << (int)section_bytes[i + 2];
-        out << " ";
-        out << std::hex << std::setw(2) << (int)section_bytes[i + 3];
+    int size = section_bytes.size();
+    for (int i = 0; i < size; i += 4) {
+        out << std::hex << std::setw(2) << (int)section_bytes[i] << " ";
+        
+        if (i + 1 < size)
+            out << std::hex << std::setw(2) << (int)section_bytes[i + 1] << " ";
+        if (i + 2 < size)
+            out << std::hex << std::setw(2) << (int)section_bytes[i + 2] << " ";
+        if (i + 3 < size)
+            out << std::hex << std::setw(2) << (int)section_bytes[i + 3] << " ";
+
         if (newline) out << "\n";
         else out << "    ";
+
         newline = !newline;
     }
 

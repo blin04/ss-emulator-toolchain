@@ -33,7 +33,7 @@ bool handleOperand(Operand &op) {
     // in all the other cases, the value is placed
     // into the literal pool
 
-    bool fits = (op.disp >= 2048 || op.disp < -2048);
+    bool fits = (op.disp < (1 << 11) && op.disp >= -(1 << 11));
     SymbolTable* symtab = ObjectFile::getSymbolTable();
 
     if ((op.symbol == nullptr && fits) 
