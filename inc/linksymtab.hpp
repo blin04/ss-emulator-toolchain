@@ -34,18 +34,22 @@ public:
     void registerFile(int fileIndex, const LinkFile& file);
 
     // full-link mode
-    void resolveFinal(const std::map<std::string, OutputSection>& sections);
-    int  finalValue(int fileIndex, int localSymbolIndex);
+    void resolveFinal(const std::vector<OutputSection*>& sections);
+    int finalValue(int fileIndex, int localSymbolIndex);
 
     // relocatable mode
     int mergedSymbolIndex(int fileIndex, int localSymbolIndex);
     std::vector<MergedSymbol> mergedSymbols();
 
+    void print();
+
 private:
     // todo: per-file local symbol tables (never merged into a single
     // name->entry map up front - only GLOB names participate in
     // cross-file lookup, see plan notes)
-    std::map<std::string, std::pair<int, int>> foundSymbols;
+    std::map<std::string, uint32_t> finalSymbolValues;
+    // std::vector<const LinkFile&> files;
+    std::map<LinkFile::LocalSymbol, std::pair<int, int>> foundSymbols;            // pairs of (fileIndex, symbolIndex)
     std::unordered_set<std::string> undefinedSymbols;
 };
 

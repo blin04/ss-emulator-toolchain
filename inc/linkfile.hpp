@@ -29,6 +29,9 @@ public:
         int                     value;
         SymbolTable::SymbolBind bind;
         bool                    defined;
+
+        // needed in order to use LocalSymbol as map key
+        bool operator<(const LocalSymbol& other) const { return name < other.name; }
     };
 
     struct RelocEntry {

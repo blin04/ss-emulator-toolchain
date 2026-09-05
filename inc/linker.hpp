@@ -42,7 +42,6 @@ private:
     void parseInputs();
     void mergeSections();
     void buildSymbolTable();
-    void calculateSectionBases();
     void validateSectionLayout();
 
     // full-link only
@@ -54,6 +53,13 @@ private:
     void renumberSymbols();
     void rewriteRelocations();
     void emitObjectFile();
+
+    // misc
+    inline OutputSection* getOutputSection(std::string name) {
+        if (outputSectionToIndex.count(name) == 0)
+            return nullptr;
+        return outputSections[outputSectionToIndex[name]];
+    }
 
     // debug / testing
     void printSectionsLayout();
@@ -67,6 +73,8 @@ private:
     std::unordered_map<std::string, int>    outputSectionToIndex;
     int                                     sectionIndex;
     GlobalSymbolTable                       symtab;
+
+    friend class GlobalSymbolTable;
 };
 
 #endif

@@ -72,15 +72,9 @@ void Linker::link() {
             emitHexDump();
         }
 
-        // debug: printing files
-        std::cout << "\n====================== parsed files ======================\n";
-        for (LinkFile file : files) {
-            std::cout << "\n";
-            file.print();
-            std::cout << "\n";
-        }
-
         printSectionsLayout();
+
+        symtab.print();
     }
     catch (const std::runtime_error& e) {
         std::cout << "error: " << e.what() << "\n";
@@ -119,9 +113,6 @@ void Linker::mergeSections() {
             );
         }
     }
-
-    calculateSectionBases();
-    validateSectionLayout();
 }
 
 void Linker::buildSymbolTable() {
@@ -138,7 +129,7 @@ void Linker::buildSymbolTable() {
 // sections without explicit placement are 
 // placed one after the other, starting
 // from the highest free memory address
-void Linker::calculateSectionBases() {
+void Linker::placeSections() {
 
     uint32_t highest_address = 0;
     std::vector<bool> handled(false, outputSections.size());
@@ -161,6 +152,8 @@ void Linker::calculateSectionBases() {
         out_sec->baseAddress = highest_address;
         highest_address += size; 
     }
+
+    validateSectionLayout();
 }
 
 // validates that there are no sections
@@ -190,16 +183,21 @@ void Linker::validateSectionLayout() {
     }
 }
 
-void Linker::placeSections() {
-    // todo: assign baseAddress to every OutputSection - explicit
-    // explicitPlacements entries first (error on overlap), then
-    // auto-place the rest contiguously
-}
-
 void Linker::applyRelocations() {
     // todo: for every file/section/relocation, compute the global
     // offset and patched value via symtab.finalValue(), write 4 bytes
     // little-endian into the OutputSection's bytes
+    OutputSection* out_sec;
+    for (int i = 0; i < files.size(); i++) {
+        for (LinkFile::RawSection& sec : files[i].sections) {
+            out_sec = getOutputSection(sec.name);
+            for (LinkFile::RelocEntry& rel : sec.relas) {
+                int offset = out_sec->fileOffsets[i] + rel.offset;
+                int value = symtab.finalValue(i, rel.symbol) + rel.addend;
+                out_sec->writeWord(offset, value);
+            }
+        }
+    }
 }
 
 void Linker::emitHexDump() {

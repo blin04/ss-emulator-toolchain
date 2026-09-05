@@ -84,6 +84,9 @@ void Section::backpatch() {
         for (int i = 0; i < e.second.size(); i++) {
             value = symtab->getSymbolValue(symbol);
             if (symtab->isAbsolute(symbol)) {
+
+                // lo addr        hi addr
+                // 0    1    2    3
                 // b4 | b3 | b2 | b1
                 int b1 = value & 0xff;
                 int b2 = (value >> 8) & 0xff;
