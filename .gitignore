@@ -1,6 +1,7 @@
 build/
 misc/*
 outputs/
+test/nivo-*
 !misc/*.l
 !misc/*.y
 *.obj
