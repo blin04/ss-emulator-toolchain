@@ -1,5 +1,6 @@
 build/
 misc/*
+outputs/
 !misc/*.l
 !misc/*.y
 *.obj

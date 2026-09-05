@@ -204,8 +204,39 @@ void Linker::applyRelocations() {
 }
 
 void Linker::emitHexDump() {
-    // todo: walk outputSections sorted by baseAddress, print
-    // contiguous "ADDR: b1 b2 ... b8" lines
+    std::vector<OutputSection*> orderedOutputSections = outputSections;
+
+    sort(orderedOutputSections.begin(), orderedOutputSections.end(), 
+        [](const OutputSection* lhs, const OutputSection* rhs) {
+            return lhs->baseAddress < rhs->baseAddress;
+        });
+
+    std::ofstream out(outputPath);
+    for (OutputSection* out_sec : orderedOutputSections) {
+        uint32_t addr = out_sec->baseAddress;
+        for (int i = 0; i < out_sec->bytes.size(); i += 8, addr += 8) {
+            out << std::hex << addr << ": ";
+
+            out << std::hex << std::setw(2) << (int)out_sec->bytes[i] << " ";
+            if (i + 1 < out_sec->bytes.size())
+                out << std::hex << std::setw(2) << (int)out_sec->bytes[i + 1] << " ";
+            if (i + 2 < out_sec->bytes.size())
+                out << std::hex << std::setw(2) << (int)out_sec->bytes[i + 2] << " ";
+            if (i + 3 < out_sec->bytes.size())
+                out << std::hex << std::setw(2) << (int)out_sec->bytes[i + 3] << " ";
+            if (i + 4 < out_sec->bytes.size())
+                out << std::hex << std::setw(2) << (int)out_sec->bytes[i + 4] << " ";
+            if (i + 5 < out_sec->bytes.size())
+                out << std::hex << std::setw(2) << (int)out_sec->bytes[i + 5] << " ";
+            if (i + 6 < out_sec->bytes.size())
+                out << std::hex << std::setw(2) << (int)out_sec->bytes[i + 6] << " ";
+            if (i + 7 < out_sec->bytes.size())
+                out << std::hex << std::setw(2) << (int)out_sec->bytes[i + 7] << " ";
+            out << "\n";
+        }
+    }
+
+    out.close();
 }
 
 void Linker::renumberSymbols() {

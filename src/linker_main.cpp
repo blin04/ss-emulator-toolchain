@@ -46,6 +46,7 @@ int main(int argc, char** argv) {
             linker->addInputFile(arg);
         }
     }
+    linker->setOutputPath("outputs/" + outputPath);
 
     linker->link();
     return 0;
