@@ -10,9 +10,13 @@ LINKER_HEADERS = inc/linker.hpp inc/linkfile.hpp inc/linksymtab.hpp inc/outsecti
 LINKER_SOURCES = src/linker_main.cpp src/linker.cpp src/linksymtab.cpp src/objreader.cpp src/linkfile.cpp
 LINKER_OUTPUT = build/linker
 
+EMULATOR_HEADERS = inc/cpu.hpp inc/hexreader.hpp
+EMULATOR_SOURCES = src/emu_main.cpp src/cpu.cpp src/hexreader.cpp
+EMULATOR_OUTPUT = build/emulator
+
 .DEFAULT_GLOBAL = all
 
-all: asembler linker
+all: asembler linker emulator
 
 asembler: $(ASM_SOURCES)
 	g++ -I misc -I inc $(ASM_SOURCES) -o $(OUTPUT)
@@ -26,6 +30,12 @@ linker: $(LINKER_SOURCES)
 linker-debug: $(LINKER_SOURCES)
 	g++ -g -I misc -I inc $(LINKER_SOURCES) -o $(LINKER_OUTPUT)
 
+emulator: $(EMULATOR_SOURCES)
+	g++ -I misc -I inc $(EMULATOR_SOURCES) -o $(EMULATOR_OUTPUT)
+
+emulator-debug: $(EMULATOR_SOURCES)
+	g++ -g -I misc -I inc $(EMULATOR_SOURCES) -o $(EMULATOR_OUTPUT)
+
 lexer: $(LEXER_SRC)
 
 $(LEXER_SRC): misc/lexer.l
@@ -37,4 +47,4 @@ $(PARSER_SRC) $(PARSER_HDR): misc/parser.y
 	bison -d -o $(PARSER_SRC) $<
 
 clean:
-	rm -f $(LEXER_SRC) $(PARSER_SRC) $(PARSER_HDR) $(OUTPUT) $(LINKER_OUTPUT)
+	rm -f $(LEXER_SRC) $(PARSER_SRC) $(PARSER_HDR) $(OUTPUT) $(LINKER_OUTPUT) $(EMULATOR_OUTPUT)

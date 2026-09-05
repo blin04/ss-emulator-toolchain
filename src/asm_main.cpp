@@ -17,9 +17,9 @@ int main(int argc, char** argv) {
     } 
 
     // temporarily reading from test directory 
-    std::string path = "./test/" + filename;
+    // std::string path = "./test/" + filename;
 
-    FILE* file = fopen(path.c_str(), "r");
+    FILE* file = fopen(filename.c_str(), "r");
     if (!file) {
         std::cout << "error: failed opening source file\n";
         return 1;
