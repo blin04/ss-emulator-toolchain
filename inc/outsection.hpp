@@ -21,7 +21,7 @@ public:
     std::string             name;
     uint32_t                baseAddress = 0;
     std::vector<uint8_t>    bytes;
-    std::map<int, int>      fileOffsets;   // fileIndex -> offset within bytes
+    std::map<int, int>      fileOffsets;   // fileIndex -> offset in bytes within the section
 };
 
 #endif

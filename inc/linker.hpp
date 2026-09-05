@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "linkfile.hpp"
-#include "linksection.hpp"
+#include "outsection.hpp"
 #include "linksymtab.hpp"
 
 // Driver singleton for the linker, mirrors the role ObjectFile plays
@@ -36,11 +36,14 @@ private:
     };
 
     Linker();
+    ~Linker();
 
     // shared passes
     void parseInputs();
     void mergeSections();
     void buildSymbolTable();
+    void calculateSectionBases();
+    void validateSectionLayout();
 
     // full-link only
     void placeSections();
@@ -52,12 +55,17 @@ private:
     void rewriteRelocations();
     void emitObjectFile();
 
+    // debug / testing
+    void printSectionsLayout();
+
     std::map<std::string, uint32_t>         explicitPlacements;
     std::vector<LinkFile>                   files;
     std::vector<std::string>                inputPaths;
     OutputMode                              outputMode;
     std::string                             outputPath;
-    std::map<std::string, OutputSection>    outputSections;
+    std::vector<OutputSection*>             outputSections;
+    std::unordered_map<std::string, int>    outputSectionToIndex;
+    int                                     sectionIndex;
     GlobalSymbolTable                       symtab;
 };
 

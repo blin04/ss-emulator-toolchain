@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "linkfile.hpp"
-#include "linksection.hpp"
+#include "outsection.hpp"
 
 // Cross-file symbol bookkeeping, shared by both linker modes.
 //
