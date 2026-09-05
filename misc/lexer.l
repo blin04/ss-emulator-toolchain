@@ -130,13 +130,13 @@ SYMBOL      ([a-z]|[A-Z]|[_.])([a-z]|[A-Z]|[_.$]|[0-9])*
 {SYMBOL}    { yylval.sval = strdup(yytext); return SYMBOL; }
 {LITERAL}   { 
                 if (strlen(yytext) < 2 || yytext[0] != '0')
-                    yylval.ival = (int)strtol(yytext, NULL, 10);
+                    yylval.uival = (unsigned int)strtoul(yytext, NULL, 10);
                 else if (yytext[1] == 'b' || yytext[1] == 'B')
-                    yylval.ival = (int)strtol(yytext, NULL, 2); 
+                    yylval.uival = (unsigned int)strtoul(yytext, NULL, 2); 
                 else if (yytext[1] == 'x' || yytext[1] == 'X')
-                    yylval.ival = (int)strtol(yytext, NULL, 16); 
+                    yylval.uival = (unsigned int)strtoul(yytext, NULL, 16); 
                 else 
-                    yylval.ival = (int)strtol(yytext, NULL, 8); 
+                    yylval.uival = (unsigned int)strtoul(yytext, NULL, 8); 
                 return LITERAL;
             }
 {STRING}    { yylval.sval = strdup(yytext); return STRING; }

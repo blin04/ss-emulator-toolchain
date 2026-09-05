@@ -12,11 +12,11 @@ extern int location_counter;     // address (offset) inside a section
 // Types
 
 typedef struct operand {
-    bool    fromMemory;
-    int     gpr;
-    int     disp;
+    bool            fromMemory;
+    int             gpr;
+    unsigned int    disp;
     // bool    absolute;
-    char*   symbol;
+    char*           symbol;
 } Operand;
 
 // Functions

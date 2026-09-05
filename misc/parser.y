@@ -63,6 +63,7 @@
 
 %union {
   int ival;
+  unsigned int uival;
   char* sval;
   char** arrval;      // null-terminated array of pointers to symbols
   Operand oprval;
@@ -104,8 +105,8 @@
 /* grammar rules */
 
 program: 
-    line {  line_num++; printf("parsed %d lines\n", line_num); }
-  | program NL line { line_num++; printf("parsed line %d \n", line_num);}
+    line {  line_num++; }
+  | program NL line { line_num++; }
   ;
 
 line:
