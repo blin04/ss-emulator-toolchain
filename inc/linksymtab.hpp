@@ -1,6 +1,7 @@
 #ifndef _LINK_SYMBOL_TABLE_H_
 #define _LINK_SYMBOL_TABLE_H_
 
+#include <fstream>
 #include <map>
 #include <unordered_set>
 #include <string>
@@ -8,6 +9,7 @@
 
 #include "linkfile.hpp"
 #include "outsection.hpp"
+#include "symtab.hpp"
 
 // Cross-file symbol bookkeeping, shared by both linker modes.
 //
@@ -32,18 +34,22 @@ public:
     };
 
     void registerFile(int fileIndex, const LinkFile& file);
+    void addEntry(std::string name, int section, int value, SymbolTable::SymbolBind bind, bool defined = true);
+    int getSymbolIndex(std::string name);
 
     // full-link mode
     void resolveFinal();
     int finalValue(int fileIndex, int localSymbolIndex);
 
     // relocatable mode
+    void assignMergedIndices();
     int mergedSymbolIndex(int fileIndex, int localSymbolIndex);
     std::vector<MergedSymbol> mergedSymbols();
 
-    void print();
+    void serialize(std::ofstream& out);
 
 private:
+    static int symbolIndex;
     // todo: per-file local symbol tables (never merged into a single
     // name->entry map up front - only GLOB names participate in
     // cross-file lookup, see plan notes)
@@ -51,6 +57,7 @@ private:
     // std::vector<const LinkFile&> files;
     std::map<LinkFile::LocalSymbol, std::pair<int, int>> foundSymbols;            // pairs of (fileIndex, symbolIndex)
     std::unordered_set<std::string> undefinedSymbols;
+    std::map<std::string, MergedSymbol> symbols;
 };
 
 #endif

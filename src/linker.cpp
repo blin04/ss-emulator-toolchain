@@ -5,7 +5,24 @@
 #include "../inc/objreader.hpp"
 #include "../inc/linkfile.hpp"
 
-Linker::Linker() 
+// writes bytes in the same grouping the assembler uses: 4-byte groups
+// space-separated, two groups per line separated by "    "
+static void writeByteDump(std::ofstream& out, const std::vector<uint8_t>& bytes) {
+    bool newline = false;
+    int size = bytes.size();
+    for (int i = 0; i < size; i += 4) {
+        out << std::hex << std::setw(2) << (int)bytes[i] << " ";
+        if (i + 1 < size) out << std::hex << std::setw(2) << (int)bytes[i + 1] << " ";
+        if (i + 2 < size) out << std::hex << std::setw(2) << (int)bytes[i + 2] << " ";
+        if (i + 3 < size) out << std::hex << std::setw(2) << (int)bytes[i + 3] << " ";
+
+        out << (newline ? "\n" : "    ");
+        newline = !newline;
+    }
+    if (newline) out << "\n";
+}
+
+Linker::Linker()
     : outputMode(OutputMode::UNSET) 
     , sectionIndex(0) {}
 
@@ -73,8 +90,6 @@ void Linker::link() {
         }
 
         printSectionsLayout();
-
-        symtab.print();
     }
     catch (const std::runtime_error& e) {
         std::cout << "error: " << e.what() << "\n";
@@ -145,7 +160,6 @@ void Linker::placeSections() {
         handled[index] = true;
     }
 
-    highest_address++;          // start from free address
     for (int i = 0; i < outputSections.size(); i++) {
         OutputSection* out_sec = outputSections[i];
         uint32_t size = out_sec->bytes.size();
@@ -184,10 +198,6 @@ void Linker::validateSectionLayout() {
 }
 
 void Linker::applyRelocations() {
-    // todo: for every file/section/relocation, compute the global
-    // offset and patched value via symtab.finalValue(), write 4 bytes
-    // little-endian into the OutputSection's bytes
-
     symtab.resolveFinal();
 
     OutputSection* out_sec;
@@ -242,17 +252,67 @@ void Linker::emitHexDump() {
 void Linker::renumberSymbols() {
     // todo: assign merged indexes via symtab.mergedSymbolIndex() for
     // every symbol referenced or defined across all files
+    int section_id = 1;
+    for (OutputSection* out_sec : outputSections) {
+        symtab.addEntry(out_sec->name, section_id++, 0, SymbolTable::SYMB_LOC);        
+    }
+    symtab.assignMergedIndices();
 }
 
 void Linker::rewriteRelocations() {
     // todo: rewrite each relocation's offset (via fileOffsets) and
     // symbolIndex (via symtab.mergedSymbolIndex())
+    OutputSection* out_sec;
+    for (int i = 0; i < files.size(); i++) {
+        for (LinkFile::RawSection& sec : files[i].sections) {
+            out_sec = getOutputSection(sec.name);
+            for (LinkFile::RelocEntry& rel : sec.relas) {
+                // rel.symbol is +1 ??? check this!
+                std::string symbol_name = files[i].symbols[rel.symbol - 1].name;
+                int global_index = symtab.getSymbolIndex(symbol_name);
+                int offset = out_sec->fileOffsets[i] + rel.offset;
+
+                LinkFile::RelocEntry entry;
+                entry.symbol = global_index;
+                entry.offset = offset; 
+                entry.addend = rel.addend;
+                out_sec->relas.push_back(entry);
+            }
+        }
+    }
 }
 
 void Linker::emitObjectFile() {
-    // todo: serialize symtab.mergedSymbols() + each OutputSection's
-    // bytes/litpool split back out + rewritten relocations, in the
-    // assembler's own text format
+    std::ofstream out(outputPath);
+
+    // ---- #.symtab ----
+    symtab.serialize(out);
+
+    const int offsetWidth = 6, relaTypeWidth = 5, symbolWidth = 10, addendWidth = 10;
+    for (OutputSection* sec : outputSections) {
+        out << "#" << sec->name << "\n";
+        writeByteDump(out, sec->bytes);
+
+        out << "#" << sec->name << ".litpool\n";
+
+        out << std::dec << "#." << sec->name << ".rela\n";
+        out << std::left
+            << std::setw(offsetWidth)   << "Offset" << " | "
+            << std::setw(relaTypeWidth) << "Type" << " | "
+            << std::setw(symbolWidth)   << "Symbol" << " | "
+            << std::setw(addendWidth)   << "Addend" << "\n";
+
+        for (const LinkFile::RelocEntry& rel : sec->relas) {
+            std::string type = (rel.type == REL) ? "REL" : "ABS";
+            out << std::left
+                << std::setw(offsetWidth)   << rel.offset << " | "
+                << std::setw(relaTypeWidth) << type << " | "
+                << std::setw(symbolWidth)   << rel.symbol << " | "
+                << std::setw(addendWidth)   << rel.addend << "\n";
+        }
+    }
+
+    out.close();
 }
 
 void Linker::printSectionsLayout() {

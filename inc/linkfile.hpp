@@ -51,6 +51,8 @@ public:
     std::vector<LocalSymbol>    symbols;
     std::vector<RawSection>     sections;
 
+    std::string getSectionName(int sectionID);
+
     // debug purposes
     void print();
 private:

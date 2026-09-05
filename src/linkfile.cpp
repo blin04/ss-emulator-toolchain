@@ -136,3 +136,7 @@ void LinkFile::print() {
         printSection(sections[i]);
     }
 }
+
+std::string LinkFile::getSectionName(int id) {
+    return sections[id - 1].name;
+}

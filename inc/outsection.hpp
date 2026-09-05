@@ -22,6 +22,7 @@ public:
     uint32_t                baseAddress = 0;
     std::vector<uint8_t>    bytes;
     std::map<int, int>      fileOffsets;   // fileIndex -> offset in bytes within the section
+    std::vector<LinkFile::RelocEntry> relas;
 
     // note: can fail silently
     inline void writeWord(uint32_t location, uint32_t value) {

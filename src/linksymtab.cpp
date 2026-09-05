@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 
@@ -5,9 +6,9 @@
 #include "../inc/linkfile.hpp"
 #include "../inc/linker.hpp"
 
+int GlobalSymbolTable::symbolIndex = 1;
+
 void GlobalSymbolTable::registerFile(int fileIndex, const LinkFile& file) {
-    // todo: register every GLOB-bind symbol from `file`; error on
-    // duplicate *defined* globals across files
     for (const LinkFile::LocalSymbol& symbol : file.symbols) {
         // linker ignores local symbols
         if (symbol.bind == SymbolTable::SYMB_LOC)
@@ -19,10 +20,24 @@ void GlobalSymbolTable::registerFile(int fileIndex, const LinkFile& file) {
             foundSymbols[symbol] = {fileIndex, symbol.index};
         }
         else undefinedSymbols.insert(symbol.name); 
-
-        // fileSymbols.push_back(file.symbols);
-        // files.push_back(file);
     }
+}
+
+void GlobalSymbolTable::addEntry(std::string name, int section, int value, SymbolTable::SymbolBind bind, bool defined) {
+    MergedSymbol entry;
+    entry.index = symbolIndex++;
+    entry.name = name;
+    entry.section = section;
+    entry.value = value;
+    entry.bind = bind;
+    entry.defined = defined;
+    symbols[name] = entry;
+}
+
+int GlobalSymbolTable::getSymbolIndex(std::string name) {
+    if (symbols.count(name) == 0)
+        return -1;
+    return symbols[name].index;
 }
 
 void GlobalSymbolTable::resolveFinal() {
@@ -56,7 +71,7 @@ void GlobalSymbolTable::resolveFinal() {
 
         int file_index = found.second.first;
         int symbol_index = found.second.second;
-        const LinkFile& file = linker->files[file_index];
+        LinkFile& file = linker->files[file_index];
         std::string section_name = file.sections[symbol.section - 1].name;
         OutputSection* out_sec = linker->getOutputSection(section_name);
 
@@ -82,6 +97,19 @@ int GlobalSymbolTable::finalValue(int fileIndex, int localSymbolIndex) {
     return 0;
 }
 
+// maps LocalSymbol entries to MergedSymbol
+void GlobalSymbolTable::assignMergedIndices() {
+    Linker* linker = Linker::getInstance();
+    for (auto found : foundSymbols) {
+        LinkFile::LocalSymbol symbol = found.first;
+        int file_index = found.second.first;
+        LinkFile& file = linker->files[file_index];
+        std::string section_name = file.getSectionName(symbol.section);
+        int section_index = getSymbolIndex(section_name);
+        addEntry(symbol.name, section_index, symbol.value, symbol.bind);
+    }
+}
+
 int GlobalSymbolTable::mergedSymbolIndex(int fileIndex, int localSymbolIndex) {
     // todo (relocatable only): locals get fresh sequential indexes,
     // matching globals collapse to one shared index, still-undefined
@@ -94,18 +122,19 @@ std::vector<GlobalSymbolTable::MergedSymbol> GlobalSymbolTable::mergedSymbols() 
     return {};
 }
 
-void GlobalSymbolTable::print() {
-    // names already known to be defined - used so an extern reference
-    // that turned out to be resolved elsewhere isn't printed twice
-    std::unordered_set<std::string> foundNames;
-    for (const auto& found : foundSymbols)
-        foundNames.insert(found.first.name);
+void GlobalSymbolTable::serialize(std::ofstream& out) {
+    std::vector<const MergedSymbol*> ordered;
+    for (const auto& entry : symbols)
+        ordered.push_back(&entry.second);
+
+    std::sort(ordered.begin(), ordered.end(),
+        [](const MergedSymbol* a, const MergedSymbol* b) {
+            return a->index < b->index;
+        });
 
     int nameWidth = 4;
-    for (const std::string& name : foundNames)
-        if ((int)name.size() > nameWidth) nameWidth = name.size();
-    for (const std::string& name : undefinedSymbols)
-        if ((int)name.size() > nameWidth) nameWidth = name.size();
+    for (const MergedSymbol* s : ordered)
+        if ((int)s->name.size() > nameWidth) nameWidth = s->name.size();
 
     const int indexWidth   = 6;
     const int sectionWidth = 10;
@@ -113,8 +142,8 @@ void GlobalSymbolTable::print() {
     const int typeWidth    = 5;
     const int definedWidth = 7;
 
-    std::cout << "#.symtab\n";
-    std::cout << std::left
+    out << "#.symtab\n";
+    out << std::left
         << std::setw(indexWidth)   << "Index" << " | "
         << std::setw(nameWidth)    << "Name" << " | "
         << std::setw(sectionWidth) << "Section ID" << " | "
@@ -122,33 +151,19 @@ void GlobalSymbolTable::print() {
         << std::setw(typeWidth)    << "Bind" << " | "
         << std::setw(definedWidth) << "Defined?" << "\n";
 
-    int index = 1;
-    for (const auto& found : foundSymbols) {
-        const LinkFile::LocalSymbol& symbol = found.first;
-        uint32_t value = finalSymbolValues.count(symbol.name)
-            ? finalSymbolValues.at(symbol.name)
-            : symbol.value;
+    for (const MergedSymbol* s : ordered) {
+        std::string bind = (s->bind == SymbolTable::SYMB_GLOB) ? "GLOB" : "LOC";
 
-        std::cout << std::left
-            << std::setw(indexWidth)   << index++ << " | "
-            << std::setw(nameWidth)    << symbol.name << " | "
-            << std::setw(sectionWidth) << symbol.section << " | "
-            << std::setw(valueWidth)   << std::hex << value << " | "
-            << std::setw(typeWidth)    << "GLOB" << " | "
-            << std::setw(definedWidth) << "yes" << "\n";
-        std::cout << std::dec;
-    }
-
-    for (const std::string& name : undefinedSymbols) {
-        if (foundNames.count(name))
-            continue;   // resolved elsewhere - already printed above
-
-        std::cout << std::left
-            << std::setw(indexWidth)   << index++ << " | "
-            << std::setw(nameWidth)    << name << " | "
-            << std::setw(sectionWidth) << "UND" << " | "
-            << std::setw(valueWidth)   << 0 << " | "
-            << std::setw(typeWidth)    << "GLOB" << " | "
-            << std::setw(definedWidth) << "no" << "\n";
+        out << std::left
+            << std::setw(indexWidth) << s->index << " | "
+            << std::setw(nameWidth)  << s->name << " | ";
+        if (s->section != 0)
+            out << std::setw(sectionWidth) << s->section;
+        else
+            out << std::setw(sectionWidth) << "UND";
+        out << " | "
+            << std::setw(valueWidth)   << s->value << " | "
+            << std::setw(typeWidth)    << bind << " | "
+            << std::setw(definedWidth) << (s->defined ? "yes" : "no") << "\n";
     }
 }
