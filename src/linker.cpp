@@ -187,6 +187,9 @@ void Linker::applyRelocations() {
     // todo: for every file/section/relocation, compute the global
     // offset and patched value via symtab.finalValue(), write 4 bytes
     // little-endian into the OutputSection's bytes
+
+    symtab.resolveFinal();
+
     OutputSection* out_sec;
     for (int i = 0; i < files.size(); i++) {
         for (LinkFile::RawSection& sec : files[i].sections) {

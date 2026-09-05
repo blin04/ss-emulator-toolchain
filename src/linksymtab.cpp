@@ -25,7 +25,7 @@ void GlobalSymbolTable::registerFile(int fileIndex, const LinkFile& file) {
     }
 }
 
-void GlobalSymbolTable::resolveFinal(const std::vector<OutputSection*>& sections) {
+void GlobalSymbolTable::resolveFinal() {
     // todo (full-link only): resolve every extern to its defining
     // file+value, compute final absolute address for every global
     // symbol using `sections`, error on anything still undefined
@@ -133,9 +133,10 @@ void GlobalSymbolTable::print() {
             << std::setw(indexWidth)   << index++ << " | "
             << std::setw(nameWidth)    << symbol.name << " | "
             << std::setw(sectionWidth) << symbol.section << " | "
-            << std::setw(valueWidth)   << value << " | "
+            << std::setw(valueWidth)   << std::hex << value << " | "
             << std::setw(typeWidth)    << "GLOB" << " | "
             << std::setw(definedWidth) << "yes" << "\n";
+        std::cout << std::dec;
     }
 
     for (const std::string& name : undefinedSymbols) {

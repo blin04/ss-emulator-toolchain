@@ -34,7 +34,7 @@ public:
     void registerFile(int fileIndex, const LinkFile& file);
 
     // full-link mode
-    void resolveFinal(const std::vector<OutputSection*>& sections);
+    void resolveFinal();
     int finalValue(int fileIndex, int localSymbolIndex);
 
     // relocatable mode
