@@ -1,4 +1,6 @@
 .section text
+.global simbol
+simbol:
 .word 0xeeee, 0xbaba, 0xffff
 .skip 8
 .section bss

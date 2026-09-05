@@ -71,20 +71,20 @@ void Linker::link() {
             applyRelocations();
             emitHexDump();
         }
+
+        // debug: printing files
+        std::cout << "\n====================== parsed files ======================\n";
+        for (LinkFile file : files) {
+            std::cout << "\n";
+            file.print();
+            std::cout << "\n";
+        }
+
+        printSectionsLayout();
     }
     catch (const std::runtime_error& e) {
         std::cout << "error: " << e.what() << "\n";
     }
-
-    // debug: printing files
-    std::cout << "\n====================== parsed files ======================\n";
-    for (LinkFile file : files) {
-        std::cout << "\n";
-        file.print();
-        std::cout << "\n";
-    }
-
-    printSectionsLayout();
 }
 
 void Linker::parseInputs() {
@@ -100,8 +100,6 @@ void Linker::mergeSections() {
     // todo: for each unique section name (first-seen order), build an
     // OutputSection by concatenating every file's blob for that name;
     // record fileOffsets as you go
-
-    std::cout << "called maderfaker\n";
 
     for (int i = 0; i < files.size(); i++) {
         LinkFile& file = files[i];
@@ -128,6 +126,9 @@ void Linker::mergeSections() {
 
 void Linker::buildSymbolTable() {
     // todo: symtab.registerFile() for every parsed file
+    for (int i = 0; i < files.size(); i++) {
+        symtab.registerFile(i, files[i]);
+    }
 }
 
 // calculates base addresses of all output

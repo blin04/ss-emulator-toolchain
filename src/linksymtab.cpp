@@ -1,8 +1,21 @@
 #include "../inc/linksymtab.hpp"
+#include "../inc/linkfile.hpp"
 
 void GlobalSymbolTable::registerFile(int fileIndex, const LinkFile& file) {
     // todo: register every GLOB-bind symbol from `file`; error on
     // duplicate *defined* globals across files
+    for (const LinkFile::LocalSymbol& symbol : file.symbols) {
+        // linker ignores local symbols
+        if (symbol.bind == SymbolTable::SYMB_LOC)
+            continue;
+        
+        if (symbol.defined) {
+            if (foundSymbols.count(symbol.name) != 0)
+                throw std::runtime_error("found multiple definitions of symbol `" + symbol.name + "`");
+            foundSymbols[symbol.name] = {fileIndex, symbol.index};
+        }
+        else undefinedSymbols.insert(symbol.name); 
+    }
 }
 
 void GlobalSymbolTable::resolveFinal(const std::map<std::string, OutputSection>& sections) {

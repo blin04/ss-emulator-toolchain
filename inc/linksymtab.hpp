@@ -2,6 +2,7 @@
 #define _LINK_SYMBOL_TABLE_H_
 
 #include <map>
+#include <unordered_set>
 #include <string>
 #include <vector>
 
@@ -44,6 +45,8 @@ private:
     // todo: per-file local symbol tables (never merged into a single
     // name->entry map up front - only GLOB names participate in
     // cross-file lookup, see plan notes)
+    std::map<std::string, std::pair<int, int>> foundSymbols;
+    std::unordered_set<std::string> undefinedSymbols;
 };
 
 #endif
