@@ -45,14 +45,15 @@ int Section::addLiteralPoolValue(int value, const char* symbol) {
     e->symbol = (symbol != nullptr ? symbol : "");
     literalPool.push_back(e);
 
+    int idx = literalPool.size() - 1;
+    literalPoolIndex[key] = idx;
+
     // if symbol isn't absolute, add a 
     // foward reference table entry
     SymbolTable* symtab = ObjectFile::getSymbolTable();
     if (symbol != nullptr && !symtab->isAbsolute(e->symbol)) 
-        addForwardReference(e->symbol, location_counter);
+        addForwardReference(e->symbol, 4 * idx);
 
-    int idx = literalPool.size() - 1;
-    literalPoolIndex[key] = idx;
     return idx;
 }
 
@@ -83,20 +84,28 @@ void Section::backpatch() {
 
         for (int i = 0; i < e.second.size(); i++) {
             value = symtab->getSymbolValue(symbol);
+
+            int offset = e.second[i];
+            // symbols from literal pool have
+            // to have their location values corrected
+            if (literalPoolIndex.count(e.first) != 0) {
+                offset += section_bytes.size();
+            }
+
             if (symtab->isAbsolute(symbol)) {
 
                 // lo addr        hi addr
                 // 0    1    2    3
-                // b4 | b3 | b2 | b1
+                // b1 | b2 | b3 | b4
                 int b1 = value & 0xff;
                 int b2 = (value >> 8) & 0xff;
                 int b3 = (value >> 16) & 0xff;
                 int b4 = (value >> 24) & 0xff;
 
-                section_bytes[e.second[i]] = b4;
-                section_bytes[e.second[i] + 1] = b3;
-                section_bytes[e.second[i] + 2] = b2;
-                section_bytes[e.second[i] + 3] = b1;
+                section_bytes[e.second[i]] = b1;
+                section_bytes[e.second[i] + 1] = b2;
+                section_bytes[e.second[i] + 2] = b3;
+                section_bytes[e.second[i] + 3] = b4;
             }
             else {
                 if (!symtab->isDefined(symbol))
@@ -104,7 +113,7 @@ void Section::backpatch() {
 
                 if (symtab->getSymbolBind(symbol) == SymbolTable::SYMB_GLOB) {
                     addRelocation(
-                        e.second[i],
+                        offset,
                         ABS,
                         symtab->getSymbolIndex(symbol),
                         0
@@ -114,7 +123,7 @@ void Section::backpatch() {
                     int symb_sec_id = symtab->getSymbolSection(symbol);
                     std::string symb_sec_name = ObjectFile::getSectionFromID(symb_sec_id);
                     addRelocation(
-                        e.second[i],
+                        offset,
                         REL,
                         symtab->getSymbolIndex(symb_sec_name),
                         // symtab->getSymbolIndex(symbol),

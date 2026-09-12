@@ -33,7 +33,7 @@ bool handleOperand(Operand &op) {
     // in all the other cases, the value is placed
     // into the literal pool
 
-    bool fits = (op.disp < (1 << 11) && op.disp >= -(1 << 11));
+    bool fits = (op.disp < (1 << 12));
     SymbolTable* symtab = ObjectFile::getSymbolTable();
 
     if ((op.symbol == nullptr && fits) 
@@ -83,6 +83,8 @@ void declareSymbolsExtern(char** symbs) {
 int getSymbolValue(const char* name) {
     return ObjectFile::getSymbolTable()->getSymbolValue(name);
 }
+
+bool isAbsolute(const char* symbol) { return ObjectFile::getSymbolTable()->isAbsolute(symbol); }
 
 bool isDefined(const char* symbol) { return ObjectFile::getSymbolTable()->isDefined(symbol); }
 

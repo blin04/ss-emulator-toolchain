@@ -213,31 +213,51 @@ void Instruction::ldHandler(bool fromMemory, int gprBase, int disp, int gprDest,
         new Instruction(0b1001, mode, gprDest, regBase, 0, disp),
         fromPool
     );
+
+    // symbol / literal value 
+    // dereferencing needed
+    if (fromMemory && fromPool) {
+        ObjectFile::getCurrentSection()->addLine(
+            new Instruction(0b1001, 0b0010, gprDest, gprDest, 0, 0),
+            false
+        );
+    }
 }
 
 // ST makes no sense with $literal
 void Instruction::stHandler(bool fromMemory, int gprBase, int disp, int gprSource, bool fromPool) {
     Instruction* inst; 
     uint8_t regBase = fromPool ? 15 : gprBase;
-    if (fromMemory) {
-        // literal, simbol      - D
-        // [%<reg>]             - gpr
-        // [%<reg> + literal/simbol]    - gpr + D
-        // 1000 0010 gprBase 0 gprSource disp      // mem32[gprBase + disp] <= gpr[grpSource]
+
+
+    if (fromMemory && fromPool) {
+        // litreal, simbol
         ObjectFile::getCurrentSection()->addLine(
-            new Instruction(0b1000, 0, regBase, 0, gprSource, disp),
+            new Instruction(0b1000, 0b0010, regBase, 0, gprSource, disp),
             fromPool
         );
     }
     else {
-        // $literal -->  error 
-        // $simbol  -->  error (todo: if symbol defined, change it's value)
-        // %<reg>  -->  1001 0001 gprBase gprSource 0 disp  // gpr[A] <= gpr[B] + D
-
-        // currently errors are silent!
-
-        ObjectFile::getCurrentSection()->addLine(
-            new Instruction(0b1001, 0, regBase, gprSource, 0, disp)
-        );
+        if (fromMemory) {
+            // literal / simbol     (non-pool)
+            // [%reg]
+            // [%reg + simbol / literal]
+            ObjectFile::getCurrentSection()->addLine(
+                new Instruction(0b1000, 0, regBase, 0, gprSource, disp),
+                fromPool
+            );
+        }
+        else {
+            // note: should raise error for $literal and 
+            // update symbol value for $simbol
+            // for now it just fails silently
+            if (gprBase != 0) {
+                // %reg
+                ObjectFile::getCurrentSection()->addLine(
+                    new Instruction(0b1001, 1, gprBase, 0, gprSource, 0),
+                    fromPool
+                );
+            }
+        }
     }
 }

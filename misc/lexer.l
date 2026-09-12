@@ -69,7 +69,7 @@ HEX_INT     0(x|X)[0-9a-fA-F]*
 LITERAL     {BIN_INT}|{OCT_INT}|{DEC_INT}|{HEX_INT}
 LPAR        \[
 MINUS       -
-NL          [\n|(\r\n)]
+NL          (\r\n|\n)
 OCT_INT     0[0-7]*
 PLUS        \+
 RPAR        \]
@@ -77,6 +77,8 @@ STRING      \".*\"
 SYMBOL      ([a-z]|[A-Z]|[_.])([a-z]|[A-Z]|[_.$]|[0-9])*
 
 %%
+
+[ \t]+      ;
 
 {ADD}       { yylval.ival = ADD; return ADD; }
 {AND}       { yylval.ival = AND; return AND; }

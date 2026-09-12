@@ -332,6 +332,7 @@ data_operand:
     }
   | LPAR gpr PLUS LITERAL RPAR {
       // 12b signed values are [-2^11, 2^11 - 1]
+      // note: possibly wrong condition, check later
       if ($4 >= (1 << 11) || $4 < -(1 << 11))
         PARSE_ERROR("literal value too large: displacement for base register addressing must fit as a signed value in 12b");
 
@@ -342,7 +343,7 @@ data_operand:
       $$.symbol = NULL;
     }
   | LPAR gpr PLUS SYMBOL RPAR {
-      if (!isDefined($4))
+      if (!isAbsolute($4))
         PARSE_ERROR("unknown symbol value: displacement value for symbol '%s' must be known during assembling", $4);
 
       if (getSymbolValue($4) >= (1 << 11) || getSymbolValue($4) < -(1 << 11))

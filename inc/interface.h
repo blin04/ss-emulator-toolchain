@@ -29,6 +29,7 @@ void defineSymbol(const char* name, int value, bool equ_defined = false);
 void declareSymbolsGlobal(char** symbols);
 void declareSymbolsExtern(char** symbols);
 int getSymbolValue(const char* name);
+bool isAbsolute(const char* symbol);
 bool isDefined(const char* symbol);
 bool isExtern(const char* symbol);
 void startNewSection(const char* name, int offset);
