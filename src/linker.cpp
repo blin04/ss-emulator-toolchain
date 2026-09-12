@@ -5,9 +5,7 @@
 #include "../inc/objreader.hpp"
 #include "../inc/linkfile.hpp"
 
-// writes bytes in the same grouping the assembler uses: 4-byte groups
-// space-separated, two groups per line separated by "    "
-static void writeByteDump(std::ofstream& out, const std::vector<uint8_t>& bytes) {
+void writeByteDump(std::ofstream& out, const std::vector<uint8_t>& bytes) {
     bool newline = false;
     int size = bytes.size();
     for (int i = 0; i < size; i += 4) {
@@ -65,13 +63,13 @@ void Linker::link() {
     }
 
     // debug case
-    std::cout << "Constructed linker with input files: ";
+    /* std::cout << "Constructed linker with input files: ";
     for (auto input : inputPaths) {
         std::cout << input;
         if (input != inputPaths.back())
             std::cout << ", ";
     }
-    std::cout << "\n";
+    std::cout << "\n"; */
 
     try {
         parseInputs();
@@ -89,7 +87,7 @@ void Linker::link() {
             emitHexDump();
         }
 
-        printSectionsLayout();
+        // printSectionsLayout();
     }
     catch (const std::runtime_error& e) {
         std::cout << "error: " << e.what() << "\n";
@@ -132,6 +130,10 @@ void Linker::mergeSections() {
 
 void Linker::buildSymbolTable() {
     // todo: symtab.registerFile() for every parsed file
+    int section_id = 1;
+    for (OutputSection* out_sec : outputSections) {
+        symtab.addEntry(out_sec->name, section_id++, out_sec->baseAddress, SymbolTable::SYMB_LOC);        
+    }
     for (int i = 0; i < files.size(); i++) {
         symtab.registerFile(i, files[i]);
     }
@@ -147,7 +149,7 @@ void Linker::buildSymbolTable() {
 void Linker::placeSections() {
 
     uint32_t highest_address = 0;
-    std::vector<bool> handled(false, outputSections.size());
+    std::vector<bool> handled(outputSections.size(), false);
     for (auto placement : explicitPlacements) {
         int index = outputSectionToIndex[placement.first];
         OutputSection* out_sec = outputSections[index];
@@ -161,6 +163,7 @@ void Linker::placeSections() {
     }
 
     for (int i = 0; i < outputSections.size(); i++) {
+        if (handled[i]) continue;
         OutputSection* out_sec = outputSections[i];
         uint32_t size = out_sec->bytes.size();
         out_sec->baseAddress = highest_address;
@@ -206,7 +209,8 @@ void Linker::applyRelocations() {
             out_sec = getOutputSection(sec.name);
             for (LinkFile::RelocEntry& rel : sec.relas) {
                 int offset = out_sec->fileOffsets[i] + rel.offset;
-                int value = symtab.finalValue(i, rel.symbol) + rel.addend;
+                std::string symbol_name = files[i].symbols[rel.symbol - 1].name;
+                int value = symtab.finalValue(symbol_name) + rel.addend;
                 out_sec->writeWord(offset, value);
             }
         }
@@ -222,6 +226,7 @@ void Linker::emitHexDump() {
         });
 
     std::ofstream out(outputPath);
+    out << std::setfill('0');
     for (OutputSection* out_sec : orderedOutputSections) {
         uint32_t addr = out_sec->baseAddress;
         for (int i = 0; i < out_sec->bytes.size(); i += 8, addr += 8) {
@@ -250,8 +255,6 @@ void Linker::emitHexDump() {
 }
 
 void Linker::renumberSymbols() {
-    // todo: assign merged indexes via symtab.mergedSymbolIndex() for
-    // every symbol referenced or defined across all files
     int section_id = 1;
     for (OutputSection* out_sec : outputSections) {
         symtab.addEntry(out_sec->name, section_id++, 0, SymbolTable::SYMB_LOC);        
@@ -267,7 +270,6 @@ void Linker::rewriteRelocations() {
         for (LinkFile::RawSection& sec : files[i].sections) {
             out_sec = getOutputSection(sec.name);
             for (LinkFile::RelocEntry& rel : sec.relas) {
-                // rel.symbol is +1 ??? check this!
                 std::string symbol_name = files[i].symbols[rel.symbol - 1].name;
                 int global_index = symtab.getSymbolIndex(symbol_name);
                 int offset = out_sec->fileOffsets[i] + rel.offset;
@@ -329,7 +331,7 @@ void Linker::printSectionsLayout() {
         std::cout << std::left << std::setw(12) << sec->name
                    << std::right
                    << "0x" << std::hex << std::setfill('0') << std::setw(8) << sec->baseAddress
-                   << std::dec << std::setfill(' ')
+                   << std::hex << std::setfill(' ')
                    << std::setw(12) << size
                    << "  0x" << std::hex << std::setfill('0') << std::setw(8) << end
                    << std::dec << std::setfill(' ') << "\n";

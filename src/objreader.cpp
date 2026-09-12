@@ -26,7 +26,7 @@ struct LineCursor {
     bool atEnd() const { return pos >= lines.size(); }
 
     bool atBlockBoundary() const {
-        return atEnd() || lines[pos].rfind("#.", 0) == 0;
+        return atEnd() || lines[pos].rfind("#", 0) == 0;
     }
 
     std::string next() {

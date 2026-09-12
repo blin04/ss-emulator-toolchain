@@ -32,6 +32,7 @@ void GlobalSymbolTable::addEntry(std::string name, int section, int value, Symbo
     entry.bind = bind;
     entry.defined = defined;
     symbols[name] = entry;
+    finalSymbolValues[name] = value;
 }
 
 int GlobalSymbolTable::getSymbolIndex(std::string name) {
@@ -61,6 +62,11 @@ void GlobalSymbolTable::resolveFinal() {
     } */
 
     Linker* linker = Linker::getInstance();
+
+    // refresh section name symbol values for final value
+    for (OutputSection* out_sec : linker->outputSections)
+        finalSymbolValues[out_sec->name] = out_sec->baseAddress;
+
     for (auto& found : foundSymbols) {
         LinkFile::LocalSymbol symbol = found.first;
 
@@ -75,9 +81,9 @@ void GlobalSymbolTable::resolveFinal() {
         std::string section_name = file.sections[symbol.section - 1].name;
         OutputSection* out_sec = linker->getOutputSection(section_name);
 
-        finalSymbolValues[symbol.name] = out_sec->baseAddress 
-            + out_sec->fileOffsets[file_index] 
-            + symbol.value; 
+        finalSymbolValues[symbol.name] = out_sec->baseAddress
+            + out_sec->fileOffsets[file_index]
+            + symbol.value;
     }
 
     if (undefinedSymbols.size()) {
@@ -92,9 +98,11 @@ void GlobalSymbolTable::resolveFinal() {
 
 }
 
-int GlobalSymbolTable::finalValue(int fileIndex, int localSymbolIndex) {
-    // todo (full-link only)
-    return 0;
+int GlobalSymbolTable::finalValue(std::string symbolName) {
+    if (finalSymbolValues.count(symbolName) == 0) {
+        throw std::runtime_error("error: accessing a non-existing symbol " + symbolName);
+    }
+    return finalSymbolValues[symbolName];
 }
 
 // maps LocalSymbol entries to MergedSymbol

@@ -38,9 +38,9 @@ std::string ObjectFile::getSectionFromID(int id) {
 void ObjectFile::newSection(std::string name, int offset) {
     if (currentSection != nullptr)
         sections.push_back(currentSection);
-    Section* s = new Section("." + name, offset); 
+    Section* s = new Section(name, offset); 
     symbolTable->defineSymbol(
-        "." + name, 
+        name, 
         s->getSectionID(), 
         0, 
         SymbolTable::SYMB_LOC 

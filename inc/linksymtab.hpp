@@ -39,7 +39,7 @@ public:
 
     // full-link mode
     void resolveFinal();
-    int finalValue(int fileIndex, int localSymbolIndex);
+    int finalValue(std::string name);
 
     // relocatable mode
     void assignMergedIndices();

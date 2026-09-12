@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
             std::string address_str = arg.substr(at + 1, arg.size());
             uint32_t address;
             try {
-                address = std::stoi(address_str);
+                address = std::stol(address_str, nullptr, 0);
             }
             catch (std::invalid_argument e) {
                 std::cout << "error: address for section " << section << "can't be converted to numeric format\n";
@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
             linker->addInputFile(arg);
         }
     }
-    linker->setOutputPath("outputs/" + outputPath);
+    linker->setOutputPath(outputPath);
 
     linker->link();
     return 0;
