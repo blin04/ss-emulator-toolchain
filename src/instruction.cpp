@@ -30,7 +30,7 @@ void Instruction::iretHandler() {
     uint8_t a = Instruction::GPR::PC;
     uint8_t b = Instruction::GPR::SP;
     ObjectFile::getCurrentSection()->addLine(
-        new Instruction(inst, mode, a, b, 0, 0)
+        new Instruction(inst, mode, a, b, 0, 4)
     );
 
     // pop status
@@ -38,7 +38,7 @@ void Instruction::iretHandler() {
     a = Instruction::CSR::status;
     b = Instruction::GPR::SP;
     ObjectFile::getCurrentSection()->addLine(
-        new Instruction(inst, mode, a, b, 0, 0)
+        new Instruction(inst, mode, a, b, 0, 4)
     );
 }
 
@@ -54,7 +54,7 @@ void Instruction::retHandler() {
             0b0011, 
             Instruction::GPR::PC, 
             Instruction::GPR::SP, 
-            0, 0)
+            0, 4)
     );
 }
 
@@ -254,7 +254,7 @@ void Instruction::stHandler(bool fromMemory, int gprBase, int disp, int gprSourc
             if (gprBase != 0) {
                 // %reg
                 ObjectFile::getCurrentSection()->addLine(
-                    new Instruction(0b1001, 1, gprBase, 0, gprSource, 0),
+                    new Instruction(0b1001, 1, gprBase, gprSource, 0, 0),
                     fromPool
                 );
             }
