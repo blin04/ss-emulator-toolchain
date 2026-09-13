@@ -118,18 +118,6 @@ void GlobalSymbolTable::assignMergedIndices() {
     }
 }
 
-int GlobalSymbolTable::mergedSymbolIndex(int fileIndex, int localSymbolIndex) {
-    // todo (relocatable only): locals get fresh sequential indexes,
-    // matching globals collapse to one shared index, still-undefined
-    // globals keep a merged index so relocations can still reference them
-    return 0;
-}
-
-std::vector<GlobalSymbolTable::MergedSymbol> GlobalSymbolTable::mergedSymbols() {
-    // todo (relocatable only)
-    return {};
-}
-
 void GlobalSymbolTable::serialize(std::ofstream& out) {
     std::vector<const MergedSymbol*> ordered;
     for (const auto& entry : symbols)

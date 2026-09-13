@@ -62,6 +62,11 @@ void Linker::link() {
         return;
     }
 
+    if (inputPaths.size() == 0) {
+        std::cout << "error: no input files specified" << std::endl;
+        return;
+    }
+
     // debug case
     /* std::cout << "Constructed linker with input files: ";
     for (auto input : inputPaths) {

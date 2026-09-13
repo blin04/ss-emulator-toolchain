@@ -4,7 +4,7 @@
 #include "../inc/linker.hpp"
 
 int main(int argc, char** argv) {
-    std::string outputPath = "out_link.txt";
+    std::string outputPath = "out.hex";
     Linker* linker = Linker::getInstance();
 
     for (int i = 1; i < argc; i++) {
