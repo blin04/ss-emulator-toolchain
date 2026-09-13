@@ -8,6 +8,13 @@ extern void yyparse();
 
 // ./asembler [-o <output_file>] input_file
 int main(int argc, char** argv) {
+
+    if (argc != 2 && argc != 4) {
+        std::cout << argc << "\n";
+        std::cout << "error: bad invocation, usage is: asembler [-o <output_file>] input_file\n";
+        return 1;
+    }
+
     ObjectFile* output = ObjectFile::getInstance();
 
     std::string filename = argv[1];

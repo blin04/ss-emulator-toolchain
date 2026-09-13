@@ -24,18 +24,18 @@ void Instruction::intHandler() {
 }
 
 void Instruction::iretHandler() {
-    // pop pc
+    // pop status
     uint8_t inst = 0b1001;          // data loading instr
-    uint8_t mode = 0b0011;
-    uint8_t a = Instruction::GPR::PC;
+    uint8_t mode = 0b0111;
+    uint8_t a = Instruction::CSR::status;
     uint8_t b = Instruction::GPR::SP;
     ObjectFile::getCurrentSection()->addLine(
         new Instruction(inst, mode, a, b, 0, 4)
     );
 
-    // pop status
-    mode = 0b0111;
-    a = Instruction::CSR::status;
+    // pop pc
+    mode = 0b0011;
+    a = Instruction::GPR::PC;
     b = Instruction::GPR::SP;
     ObjectFile::getCurrentSection()->addLine(
         new Instruction(inst, mode, a, b, 0, 4)

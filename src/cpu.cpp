@@ -106,9 +106,9 @@ bool CPU::halted() {
 
 void CPU::enterInterrupt(int causeCode) {
     cause = causeCode;
-    mem[sp] = status;   // push status
-    sp -= 4;
     mem[sp] = pc;       // push pc
+    sp -= 4;
+    mem[sp] = status;   // push status
     sp -= 4;
     status &= ~I;       // mask interrupts
     pc = handler;

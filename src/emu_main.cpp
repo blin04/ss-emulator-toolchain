@@ -13,7 +13,6 @@ int main(int argc, char** argv)
     }
 
     CPU cpu;
-    Terminal term;
 
     try {
         HexReader::load(argv[1], cpu);
