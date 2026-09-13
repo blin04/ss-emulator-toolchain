@@ -18,16 +18,15 @@ void HexReader::load(const std::string& path, CPU& cpu) {
 
         uint32_t address = std::stoul(line.substr(0, colon), nullptr, 16);
 
+        // parse bytes
         std::istringstream bytes(line.substr(colon + 1));
         std::vector<uint8_t> byteValues;
         std::string byteToken;
         while (bytes >> byteToken)
             byteValues.push_back(std::stoi(byteToken, nullptr, 16));
 
-        for (size_t i = 0; i + 4 <= byteValues.size(); i += 4) {
-            uint32_t word = (byteValues[i]     << 24) | (byteValues[i + 1] << 16)
-                           | (byteValues[i + 2] << 8)  |  byteValues[i + 3];
-            cpu.loadWord(address + i, word);
+        for (size_t i = 0; i < byteValues.size(); i++) {
+            cpu.writeByte(address + i, byteValues[i]);
         }
     }
 }

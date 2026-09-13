@@ -10,13 +10,15 @@ LINKER_HEADERS = inc/linker.hpp inc/linkfile.hpp inc/linksymtab.hpp inc/outsecti
 LINKER_SOURCES = src/linker_main.cpp src/linker.cpp src/linksymtab.cpp src/objreader.cpp src/linkfile.cpp
 LINKER_OUTPUT = build/linker
 
-EMULATOR_HEADERS = inc/cpu.hpp inc/hexreader.hpp
-EMULATOR_SOURCES = src/emu_main.cpp src/cpu.cpp src/hexreader.cpp
+EMULATOR_HEADERS = inc/cpu.hpp inc/hexreader.hpp inc/terminal.hpp inc/timer.hpp
+EMULATOR_SOURCES = src/emu_main.cpp src/cpu.cpp src/hexreader.cpp src/terminal.cpp src/timer.cpp
 EMULATOR_OUTPUT = build/emulator
 
 .DEFAULT_GLOBAL = all
 
 all: asembler linker emulator
+
+debug: asembler-debug linker-debug emulator-debug
 
 asembler: $(ASM_SOURCES)
 	g++ -I misc -I inc $(ASM_SOURCES) -o $(OUTPUT)

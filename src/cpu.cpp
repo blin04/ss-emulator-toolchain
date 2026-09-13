@@ -4,10 +4,22 @@
 #include <string>
 
 #include "../inc/cpu.hpp"
+#include "../inc/terminal.hpp"
+#include "../inc/timer.hpp"
 
 CPU::CPU() 
-    : registers{}, csrs{} {
+    : registers{}, csrs{}
+    , terminal(new Terminal())
+    , timer(new Timer()) 
+    , terminalInterrupt(false)
+    , timerInterrupt(false) {
     pc = 0x40000000;
+    status = 0;
+}
+
+CPU::~CPU() {
+    delete terminal;
+    delete timer;
 }
 
 void CPU::execute() {
@@ -17,12 +29,13 @@ void CPU::execute() {
     uint8_t b4 = mem[pc + 3];
     pc += 4;
 
-    uint8_t oc = b1 & 0xf0;
+    uint8_t oc = (b1 >> 4) & 0xf;
     uint8_t mode = b1 & 0xf;
-    uint8_t a = b2 & 0xf0;
+    uint8_t a = (b2 >> 4) & 0xf;
     uint8_t b = b2 & 0xf;
-    uint8_t c = b3 & 0xf0;
+    uint8_t c = (b3 >> 4) & 0xf;
     int disp = ((b3 & 0xf) << 8) | b4;
+    if (disp & 0x800) disp |= ~0xfff;   // sign-extend the 12-bit field
 
     // process instruction
     switch (oc) {
@@ -32,6 +45,12 @@ void CPU::execute() {
             return;
         case 1:
             // interupt
+            cause = 4;
+            writeWord(sp - 4, status);
+            writeWord(sp - 8, pc);
+            sp -= 8;
+            status |= 4;        // mask interupts
+            pc = handler;
             break;
         case 2:
             handleCall(mode, a, b, c, disp);
@@ -61,31 +80,78 @@ void CPU::execute() {
             // note: silent failure
             break;
     }
+
+    // check for interrupts, handle if needed
+    if (!(status & I)) {
+        timerInterrupt |= (timer->poll() && !(status & Tr));
+        terminalInterrupt |= (terminal->poll() && !(status & Tl));
+    }
+
+    if (timerInterrupt) {
+        std::cout << "got timer interrupt\n";
+        timerInterrupt = false;
+        pc = handler;
+    }
+    else if (terminalInterrupt) {
+        std::cout << "got terminal interrupt\n";
+        terminalInterrupt = false;
+        pc = handler;
+    }
+
 }
 
 bool CPU::halted() {
     return isHalted;
 }
 
-void CPU::loadWord(uint32_t address, uint32_t word) {
-    mem[address] = word;
+void CPU::enterInterrupt(int causeCode) {
+    cause = causeCode;
+    mem[sp] = status;   // push status
+    sp -= 4;
+    mem[sp] = pc;       // push pc
+    sp -= 4;
+    status &= ~I;       // mask interrupts
+    pc = handler;
+}
+
+// reassembles a word from 4 little-endian bytes
+// (lowest address holds the least significant byte)
+uint32_t CPU::readWord(uint32_t address) {
+    uint8_t b0 = mem[address];
+    uint8_t b1 = mem[address + 1];
+    uint8_t b2 = mem[address + 2];
+    uint8_t b3 = mem[address + 3];
+    return b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
+}
+
+void CPU::writeByte(uint32_t address, uint8_t byte) {
+    mem[address] = byte; 
+}
+
+// writes a word to memory in little-endian format
+// (lowest address holds the least significant byte)
+void CPU::writeWord(uint32_t address, uint32_t word) {
+    mem[address]     = word & 0xff;
+    mem[address + 1] = (word >> 8) & 0xff;
+    mem[address + 2] = (word >> 16) & 0xff;
+    mem[address + 3] = (word >> 24) & 0xff;
 }
 
 void CPU::handleCall(uint8_t mode, uint8_t a, uint8_t b, uint8_t c, int disp) {
     switch (mode) {
         case 0:
             // push pc
-            mem[sp] = pc; 
             sp -= 4;
+            writeWord(sp, pc);
             // pc <= gpr[A] + gpr[B] + D
             pc = registers[a] + registers[b] + disp;
             break;
         case 1:
             // push pc
-            mem[sp] = pc; 
             sp -= 4;
-            // pc <= gpr[A] + gpr[B] + D
-            pc = mem[registers[a] + registers[b] + disp];
+            writeWord(sp, pc);
+            // pc <= mem[gpr[A] + gpr[B] + D]
+            pc = readWord(registers[a] + registers[b] + disp);
             break;
         default:
             break;
@@ -110,19 +176,19 @@ void CPU::handleJump(uint8_t mode, uint8_t a, uint8_t b, uint8_t c, int disp) {
                 pc = registers[a] + disp;
             break;
         case 8:
-            pc = mem[registers[a] + disp];
+            pc = readWord(registers[a] + disp);
             break;
         case 9:
             if (registers[b] == registers[c])
-                pc = mem[registers[a] + disp];
+                pc = readWord(registers[a] + disp);
             break;
         case 10:
             if (registers[b] != registers[c])
-                pc = mem[registers[a] + disp];
+                pc = readWord(registers[a] + disp);
             break;
         case 11:
             if (registers[b] > registers[c])
-                pc = mem[registers[a] + disp];
+                pc = readWord(registers[a] + disp);
             break;
     }
 } 
@@ -181,14 +247,14 @@ void CPU::handleShifts(uint8_t mode, uint8_t a, uint8_t b, uint8_t c, int disp) 
 void CPU::handleStore(uint8_t mode, uint8_t a, uint8_t b, uint8_t c, int disp) {
     switch (mode) {
         case 0:
-            mem[registers[a] + registers[b] + disp] = registers[c];
+            writeWord(registers[a] + registers[b] + disp, registers[c]);
             break;
         case 1:
-            mem[mem[registers[a] + registers[b] + disp]] = registers[c];
+            registers[a] = registers[a] + disp;
+            writeWord(registers[a], registers[c]);
             break;
         case 2:
-            registers[a] = registers[a] + disp;
-            mem[registers[a]] = registers[c];
+            writeWord(readWord(registers[a] + registers[b] + disp), registers[c]);
             break;
     }
 }
@@ -202,11 +268,11 @@ void CPU::handleLoad(uint8_t mode, uint8_t a, uint8_t b, uint8_t c, int disp) {
             registers[a] = registers[b] + disp;
             break;
         case 2:
-            registers[a] = mem[registers[b] + registers[c] + disp];
+            registers[a] = readWord(registers[b] + registers[c] + disp);
             break;
         case 3:
-            registers[a] = mem[registers[b]];
-            registers[b] = registers[b] = disp;
+            registers[a] = readWord(registers[b]);
+            registers[b] = registers[b] + disp;
             break;
         case 4:
             csrs[a] = registers[b];
@@ -215,10 +281,10 @@ void CPU::handleLoad(uint8_t mode, uint8_t a, uint8_t b, uint8_t c, int disp) {
             csrs[a] = csrs[b] | disp;
             break;
         case 6:
-            csrs[a] = mem[registers[b] + registers[c] + disp];
+            csrs[a] = readWord(registers[b] + registers[c] + disp);
             break;
         case 7:
-            registers[a] = mem[registers[b]];
+            csrs[a] = readWord(registers[b]);
             registers[b] = registers[b] + disp;
             break;
     }
