@@ -44,13 +44,7 @@ void CPU::execute() {
             printState();
             return;
         case 1:
-            // interupt
-            cause = 4;
-            writeWord(sp - 4, status);
-            writeWord(sp - 8, pc);
-            sp -= 8;
-            status |= 4;        // mask interupts
-            pc = handler;
+            enterInterrupt(4);
             break;
         case 2:
             handleCall(mode, a, b, c, disp);
@@ -106,11 +100,11 @@ bool CPU::halted() {
 
 void CPU::enterInterrupt(int causeCode) {
     cause = causeCode;
-    mem[sp] = pc;       // push pc
     sp -= 4;
-    mem[sp] = status;   // push status
+    writeWord(sp, pc);              // push pc
     sp -= 4;
-    status &= ~I;       // mask interrupts
+    writeWord(sp, status);          // push status
+    status |= I;        // mask interrupts
     pc = handler;
 }
 

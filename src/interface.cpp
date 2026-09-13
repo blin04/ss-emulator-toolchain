@@ -141,6 +141,10 @@ void zeroOpStatementHandler(int stmt) {
             Instruction::intHandler();
             break;
         case yytoken_kind_t::IRET:
+            // special case: this statement generates 
+            // two CPU instructions so the location 
+            // conter has to be increased once more
+            location_counter += 4;      
             Instruction::iretHandler();
             break;
         case yytoken_kind_t::RET:
