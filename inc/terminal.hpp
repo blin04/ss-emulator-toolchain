@@ -12,6 +12,8 @@ public:
     ~Terminal();
 
     bool poll();
+    int readIn();
+    void writeOut(int word);
 private:
     termios oldConfig;
 

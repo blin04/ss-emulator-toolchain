@@ -71,7 +71,8 @@ void CPU::execute() {
             handleLoad(mode, a, b, c, disp);
             break;
         default:
-            // note: silent failure
+            // invalid op code, generate interrupt
+            enterInterrupt(1);
             break;
     }
 
@@ -82,16 +83,13 @@ void CPU::execute() {
     }
 
     if (timerInterrupt) {
-        std::cout << "got timer interrupt\n";
         timerInterrupt = false;
-        pc = handler;
+        enterInterrupt(2);
     }
     else if (terminalInterrupt) {
-        std::cout << "got terminal interrupt\n";
         terminalInterrupt = false;
-        pc = handler;
+        enterInterrupt(3);
     }
-
 }
 
 bool CPU::halted() {
@@ -111,6 +109,9 @@ void CPU::enterInterrupt(int causeCode) {
 // reassembles a word from 4 little-endian bytes
 // (lowest address holds the least significant byte)
 uint32_t CPU::readWord(uint32_t address) {
+    if (address == 0xffffff04) {
+        return terminal->readIn();
+    }
     uint8_t b0 = mem[address];
     uint8_t b1 = mem[address + 1];
     uint8_t b2 = mem[address + 2];
@@ -125,10 +126,20 @@ void CPU::writeByte(uint32_t address, uint8_t byte) {
 // writes a word to memory in little-endian format
 // (lowest address holds the least significant byte)
 void CPU::writeWord(uint32_t address, uint32_t word) {
-    mem[address]     = word & 0xff;
-    mem[address + 1] = (word >> 8) & 0xff;
-    mem[address + 2] = (word >> 16) & 0xff;
-    mem[address + 3] = (word >> 24) & 0xff;
+    if (address == 0xffffff00) {
+        // term out
+        terminal->writeOut(word);
+    }
+    else if (address == 0xffffff10) {
+        //  tim_cfg
+        timer->configureTimer(word);
+    }
+    else {
+        mem[address]     = word & 0xff;
+        mem[address + 1] = (word >> 8) & 0xff;
+        mem[address + 2] = (word >> 16) & 0xff;
+        mem[address + 3] = (word >> 24) & 0xff;
+    }
 }
 
 void CPU::handleCall(uint8_t mode, uint8_t a, uint8_t b, uint8_t c, int disp) {
