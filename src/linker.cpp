@@ -210,6 +210,8 @@ void Linker::applyRelocations() {
                 int offset = out_sec->fileOffsets[i] + rel.offset;
                 std::string symbol_name = files[i].symbols[rel.symbol - 1].name;
                 int value = symtab.finalValue(symbol_name) + rel.addend;
+                if (rel.type == REL)
+                    value += getOutputSection(symbol_name)->fileOffsets[i];
                 out_sec->writeWord(offset, value);
             }
         }
