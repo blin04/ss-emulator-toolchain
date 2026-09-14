@@ -100,7 +100,6 @@ void Linker::link() {
 }
 
 void Linker::parseInputs() {
-    // todo: ObjReader::parse() every path in inputPaths into `files`
     LinkFile file;
     for (const std::string& path : inputPaths) {
         file = ObjReader::parse(path);
@@ -109,10 +108,6 @@ void Linker::parseInputs() {
 }
 
 void Linker::mergeSections() {
-    // todo: for each unique section name (first-seen order), build an
-    // OutputSection by concatenating every file's blob for that name;
-    // record fileOffsets as you go
-
     for (int i = 0; i < files.size(); i++) {
         LinkFile& file = files[i];
         for (LinkFile::RawSection& sec : file.sections) {
@@ -134,7 +129,6 @@ void Linker::mergeSections() {
 }
 
 void Linker::buildSymbolTable() {
-    // todo: symtab.registerFile() for every parsed file
     int section_id = 1;
     for (OutputSection* out_sec : outputSections) {
         symtab.addEntry(out_sec->name, section_id++, out_sec->baseAddress, SymbolTable::SYMB_LOC);        
@@ -268,8 +262,6 @@ void Linker::renumberSymbols() {
 }
 
 void Linker::rewriteRelocations() {
-    // todo: rewrite each relocation's offset (via fileOffsets) and
-    // symbolIndex (via symtab.mergedSymbolIndex())
     OutputSection* out_sec;
     for (int i = 0; i < files.size(); i++) {
         for (LinkFile::RawSection& sec : files[i].sections) {
