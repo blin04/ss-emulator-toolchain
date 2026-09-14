@@ -97,6 +97,8 @@
 %type <ival> three_op_stmt
 %type <ival> gpr;
 %type <ival> csr;
+%type <ival> one_op_stmt;
+%type <ival> statement;
 %type <oprval> jump_operand;
 %type <oprval> data_operand
 
@@ -112,7 +114,7 @@ program:
 line:
     /* empty */
   | directive comment { location_counter += $1; }
-  | statement comment { location_counter += 4; }
+  | statement comment { location_counter += 4 * $1; }
   | label comment {
       // if (externSymbol($1)) PARSE_ERROR("definition of symbol '%s' previously declared as extern", $1);
       defineSymbol($1, location_counter);
@@ -125,7 +127,7 @@ line:
   | label statement comment {
       // if (externSymbol($1)) PARSE_ERROR("definition of symbol '%s' previously declared as extern", $1);
       defineSymbol($1, location_counter);
-      location_counter += 4;
+      location_counter += 4 * $2;
     }
   | COMMENT
   ;
@@ -219,14 +221,14 @@ symbol_or_literal_list:
   ;
 
 statement: 
-    zero_op_stmt { zeroOpStatementHandler($1); }
-  | one_op_stmt
-  | two_op_stmt gpr COMMA gpr { twoOpStatementHandler($1, $2, $4); }
-  | three_op_stmt gpr COMMA gpr COMMA jump_operand { threeOpStatementHandler($1, $2, $4, $6); }
-  | LD data_operand COMMA gpr { memoryStatementHandler($1, $2, $4); }
-  | ST gpr COMMA data_operand { memoryStatementHandler($1, $4, $2); }
-  | CSRRD csr COMMA gpr { twoOpStatementHandler($1, $2, $4); }
-  | CSRWR gpr COMMA csr { twoOpStatementHandler($1, $2, $4); }
+    zero_op_stmt { $$ = zeroOpStatementHandler($1); }
+  | one_op_stmt { $$ = $1; }
+  | two_op_stmt gpr COMMA gpr { $$ = twoOpStatementHandler($1, $2, $4); }
+  | three_op_stmt gpr COMMA gpr COMMA jump_operand { $$ = threeOpStatementHandler($1, $2, $4, $6); }
+  | LD data_operand COMMA gpr { $$ = memoryStatementHandler($1, $2, $4); }
+  | ST gpr COMMA data_operand { $$ = memoryStatementHandler($1, $4, $2); }
+  | CSRRD csr COMMA gpr { $$ = twoOpStatementHandler($1, $2, $4); }
+  | CSRWR gpr COMMA csr { $$ = twoOpStatementHandler($1, $2, $4); }
   ;
 
 zero_op_stmt: 
@@ -237,8 +239,8 @@ zero_op_stmt:
   ;                  
 
 one_op_stmt: 
-    data_one_op_stmt gpr { oneOpStatementHandler($1, $2); }
-  | jmp_one_op_stmt jump_operand { oneOpJumpStatementHandler($1, $2); }
+    data_one_op_stmt gpr { $$ = oneOpStatementHandler($1, $2); }
+  | jmp_one_op_stmt jump_operand { $$ = oneOpJumpStatementHandler($1, $2); }
   ;
 
 two_op_stmt:

@@ -38,44 +38,42 @@ public:
         cause
     };
 
-    // todo: add functions for corrections 
-    // depending on displacement values
 
-    // Functions for instruction creation
-    // big-endian is used for storing the instructions
 
-    static void haltHandler();
-    static void intHandler();
-    static void iretHandler();
-    static void retHandler();
+    // instruction handlers return the number of machine
+    // instructions they emit
+    static int haltHandler();
+    static int intHandler();
+    static int iretHandler();
+    static int retHandler();
 
-    static void notHandler(int op);
-    static void pushHandler(int op);
-    static void popHandler(int op);
+    static int notHandler(int op);
+    static int pushHandler(int op);
+    static int popHandler(int op);
 
-    static void callHandler(int op, bool fromPool);
-    static void jmpHandler(int op, bool fromPool);
+    static int callHandler(int op, bool fromPool);
+    static int jmpHandler(int op, bool fromPool);
 
-    static void beqHandler(int gpr1, int gpr2, int op, bool fromPool);
-    static void bneHandler(int gpr1, int gpr2, int op, bool fromPool);
-    static void bgtHandler(int gpr1, int gpr2, int op, bool fromPool);
+    static int beqHandler(int gpr1, int gpr2, int op, bool fromPool);
+    static int bneHandler(int gpr1, int gpr2, int op, bool fromPool);
+    static int bgtHandler(int gpr1, int gpr2, int op, bool fromPool);
 
-    static void xchngHandler(int gpr1, int gpr2);
-    static void addHandler(int gpr1, int gpr2);
-    static void subHandler(int gpr1, int gpr2);
-    static void mulHandler(int gpr1, int gpr2);
-    static void divHandler(int gpr1, int gpr2);
-    static void andHandler(int gpr1, int gpr2);
-    static void orHandler(int gpr1, int gpr2);
-    static void xorHandler(int gpr1, int gpr2);
-    static void shlHandler(int gpr1, int gpr2);
-    static void shrHandler(int gpr1, int gpr2);
+    static int xchngHandler(int gpr1, int gpr2);
+    static int addHandler(int gpr1, int gpr2);
+    static int subHandler(int gpr1, int gpr2);
+    static int mulHandler(int gpr1, int gpr2);
+    static int divHandler(int gpr1, int gpr2);
+    static int andHandler(int gpr1, int gpr2);
+    static int orHandler(int gpr1, int gpr2);
+    static int xorHandler(int gpr1, int gpr2);
+    static int shlHandler(int gpr1, int gpr2);
+    static int shrHandler(int gpr1, int gpr2);
 
-    static void ldHandler(bool fromMemory, int gprBase, int disp, int gprSource, bool fromPool);
-    static void stHandler(bool fromMemory, int gprBase, int disp, int gprSource, bool fromPool);
+    static int ldHandler(bool fromMemory, int gprBase, int disp, int gprSource, bool fromPool);
+    static int stHandler(bool fromMemory, int gprBase, int disp, int gprSource, bool fromPool);
 
-    static void csrrdHandler(int csr, int gpr);
-    static void csrwrHandler(int gpr, int csr);
+    static int csrrdHandler(int csr, int gpr);
+    static int csrwrHandler(int gpr, int csr);
 
 private:
     uint8_t b1;

@@ -132,141 +132,130 @@ int addWordDirective(char** initializers) {
     return 4 * i;
 }
 
-void zeroOpStatementHandler(int stmt) {
+int zeroOpStatementHandler(int stmt) {
     switch (stmt) {
         case yytoken_kind_t::HALT:
-            Instruction::haltHandler();
-            break;
+            return Instruction::haltHandler();
         case yytoken_kind_t::INT:
-            Instruction::intHandler();
-            break;
+            return Instruction::intHandler();
         case yytoken_kind_t::IRET:
-            // special case: this statement generates 
-            // two CPU instructions so the location 
-            // conter has to be increased once more
-            location_counter += 4;      
-            Instruction::iretHandler();
-            break;
+            return Instruction::iretHandler();
         case yytoken_kind_t::RET:
-            Instruction::retHandler();
-            break;
+            return Instruction::retHandler();
     }
+    return 0;
 }
 
-void oneOpStatementHandler(int stmt, int op) {
+int oneOpStatementHandler(int stmt, int op) {
     switch (stmt) {
         case yytoken_kind_t::NOT:
-            Instruction::notHandler(op);
-            break;
+            return Instruction::notHandler(op);
         case yytoken_kind_t::PUSH:
-            Instruction::pushHandler(op);
-            break;
+            return Instruction::pushHandler(op);
         case yytoken_kind_t::POP:
-            Instruction::popHandler(op);
-            break;
+            return Instruction::popHandler(op);
     }
+    return 0;
 }
 
 /*
 *   Handles: [call | jmp] <operand>
 */
-void oneOpJumpStatementHandler(int stmt, Operand op) {
+int oneOpJumpStatementHandler(int stmt, Operand op) {
 
     bool fromPool = handleOperand(op);
+    int count = 0;
 
     switch (stmt) {
         case yytoken_kind_t::JMP:
-            Instruction::jmpHandler(op.disp, fromPool);
+            count = Instruction::jmpHandler(op.disp, fromPool);
             break;
         case yytoken_kind_t::CALL:
-            Instruction::callHandler(op.disp, fromPool);
+            count = Instruction::callHandler(op.disp, fromPool);
             break;
     }
 
     if (op.symbol != nullptr)
         free(op.symbol);
+
+    return count;
 }
 
-void twoOpStatementHandler(int stmt, int op1, int op2) {
+int twoOpStatementHandler(int stmt, int op1, int op2) {
     switch (stmt) {
         case yytoken_kind_t::ADD:
-            Instruction::addHandler(op1, op2);
-            break;
+            return Instruction::addHandler(op1, op2);
         case yytoken_kind_t::SUB:
-            Instruction::subHandler(op1, op2);
-            break;
+            return Instruction::subHandler(op1, op2);
         case yytoken_kind_t::MUL:
-            Instruction::mulHandler(op1, op2);
-            break;
+            return Instruction::mulHandler(op1, op2);
         case yytoken_kind_t::DIV:
-            Instruction::divHandler(op1, op2);
-            break;
+            return Instruction::divHandler(op1, op2);
         case yytoken_kind_t::AND:
-            Instruction::andHandler(op1, op2);
-            break;
+            return Instruction::andHandler(op1, op2);
         case yytoken_kind_t::OR:
-            Instruction::orHandler(op1, op2);
-            break;
+            return Instruction::orHandler(op1, op2);
         case yytoken_kind_t::XOR:
-            Instruction::xorHandler(op1, op2);
-            break;
+            return Instruction::xorHandler(op1, op2);
         case yytoken_kind_t::SHL:
-            Instruction::shlHandler(op1, op2);
-            break;
+            return Instruction::shlHandler(op1, op2);
         case yytoken_kind_t::SHR:
-            Instruction::shrHandler(op1, op2);
-            break;
+            return Instruction::shrHandler(op1, op2);
         case yytoken_kind_t::XCHNG:
-            Instruction::xchngHandler(op1, op2);
-            break;
+            return Instruction::xchngHandler(op1, op2);
         case yytoken_kind_t::CSRRD:
-            Instruction::csrrdHandler(op1, op2);
-            break;
+            return Instruction::csrrdHandler(op1, op2);
         case yytoken_kind_t::CSRWR:
-            Instruction::csrwrHandler(op1, op2);
-            break;
+            return Instruction::csrwrHandler(op1, op2);
     }
+    return 0;
 }
 
 /*
 *   Handles: [beq | bne | bgt] <gpr1>, <gpr2>, <operand>
 */
-void threeOpStatementHandler(int stmt, int gpr1, int gpr2, Operand op) {
+int threeOpStatementHandler(int stmt, int gpr1, int gpr2, Operand op) {
 
     bool fromPool = handleOperand(op);
+    int count = 0;
 
     switch (stmt) {
         case yytoken_kind_t::BEQ:
-            Instruction::beqHandler(gpr1, gpr2, op.disp, fromPool);
+            count = Instruction::beqHandler(gpr1, gpr2, op.disp, fromPool);
             break;
         case yytoken_kind_t::BNE:
-            Instruction::bneHandler(gpr1, gpr2, op.disp, fromPool);
+            count = Instruction::bneHandler(gpr1, gpr2, op.disp, fromPool);
             break;
         case yytoken_kind_t::BGT:
-            Instruction::bgtHandler(gpr1, gpr2, op.disp, fromPool);
+            count = Instruction::bgtHandler(gpr1, gpr2, op.disp, fromPool);
             break;
     }
 
     if (op.symbol != nullptr)
         free(op.symbol);
+
+    return count;
 }
 
 /*
 *   Handles: ld <operand>, <gpr> | st <gpr>, <operand>
 */
-void memoryStatementHandler(int type, Operand op, int gpr) {
+int memoryStatementHandler(int type, Operand op, int gpr) {
 
     bool fromPool = handleOperand(op);
+    int count = 0;
 
     switch (type) {
         case yytoken_kind_t::LD:
-            Instruction::ldHandler(op.fromMemory, op.gpr, op.disp, gpr, fromPool);
+            count = Instruction::ldHandler(op.fromMemory, op.gpr, op.disp, gpr, fromPool);
             break;
         case yytoken_kind_t::ST:
-            Instruction::stHandler(op.fromMemory, op.gpr, op.disp, gpr, fromPool);
+            count = Instruction::stHandler(op.fromMemory, op.gpr, op.disp, gpr, fromPool);
             break;
     }
 
     if (op.symbol != nullptr)
         free(op.symbol);
+
+    return count;
 }

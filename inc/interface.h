@@ -34,12 +34,14 @@ bool isDefined(const char* symbol);
 bool isExtern(const char* symbol);
 void startNewSection(const char* name, int offset);
 
-void zeroOpStatementHandler(int stmt);
-void oneOpStatementHandler(int stmt, int op);
-void oneOpJumpStatementHandler(int stmt, Operand op);
-void twoOpStatementHandler(int stmt, int gpr1, int gpr2);
-void threeOpStatementHandler(int stmt, int gpr1, int gpr2, Operand op);
+// statement handlers return the number of machine instructions
+// emitted, so the parser can advance the location counter correctly
+int zeroOpStatementHandler(int stmt);
+int oneOpStatementHandler(int stmt, int op);
+int oneOpJumpStatementHandler(int stmt, Operand op);
+int twoOpStatementHandler(int stmt, int gpr1, int gpr2);
+int threeOpStatementHandler(int stmt, int gpr1, int gpr2, Operand op);
 
-void memoryStatementHandler(int type, Operand op, int gpr);
+int memoryStatementHandler(int type, Operand op, int gpr);
 
 #endif
