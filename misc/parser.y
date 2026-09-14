@@ -67,6 +67,7 @@
   char* sval;
   char** arrval;      // null-terminated array of pointers to symbols
   Operand oprval;
+  Expr* exprval;
 }
 
 /* declaring used tokens */
@@ -86,7 +87,7 @@
 %left PLUS MINUS
 
 %type <ival> directive      // value to add to location counter
-%type <ival> exp;
+// %type <ival> exp;
 %type <sval> label;
 %type <arrval> symbol_list
 %type <arrval> symbol_or_literal_list
@@ -101,6 +102,7 @@
 %type <ival> statement;
 %type <oprval> jump_operand;
 %type <oprval> data_operand
+%type <exprval> expr;
 
 %%
 
@@ -145,7 +147,7 @@ label:
 directive:
     ASCII STRING { addAsciiDirective($2); $$ = strlen($2) - 2; free($2); }    // -2 because of " and "
   | END { YYACCEPT; /* end parsing successfully */ }
-  | EQU SYMBOL COMMA exp { defineSymbol($2, $4, true); $$ = 0;}
+  | EQU SYMBOL COMMA expr { defineEquSymbol($2, $4); $$ = 0;}
   | EXTERN symbol_list {
       char* bad = firstDefinedSymbol($2);
       if (bad) PARSE_ERROR("defined symbol '%s' can't be declared as extern", bad);
@@ -359,11 +361,11 @@ data_operand:
     }
   ;
 
-exp:
-    exp PLUS exp {$$ = $1 + $3; }
-  | exp MINUS exp { $$ = $1 - $3; }
-  | SYMBOL { $$ = getSymbolValue($1); }
-  | LITERAL { $$ = $1; }
+expr:
+    expr PLUS expr  { $$ = exprAdd($1, $3); }
+  | expr MINUS expr { $$ = exprSub($1, $3); }
+  | SYMBOL        { $$ = exprSymbol($1); }
+  | LITERAL       { $$ = exprLiteral($1); }
   ;
 
 // for csr and gpr index of the used register

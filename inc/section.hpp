@@ -10,6 +10,7 @@
 enum RelocType { ABS, REL };
 
 class Line;
+struct Expr;
 
 class Section {
 public:
@@ -22,9 +23,11 @@ public:
     // returns index of the added value in the pool
     int addLiteralPoolValue(int value, const char* symbol);
     void addForwardReference(std::string symbol, int location);
+    void addPendingEqu(const char* name, Expr* expr);
     void backpatch();
     int getSectionID();
     std::string getSectionName();
+    bool resolvePendingEqus();
     void serialize(std::ofstream& file);
 private:
 
@@ -45,6 +48,8 @@ private:
         std::string symbol;
     } LitPoolEntry;
 
+    static int counter;
+
     // section contents in bytes
     std::vector<uint8_t> section_bytes;
 
@@ -64,7 +69,7 @@ private:
     std::vector<RelocEntry*> relocations;
     int startAddress;
 
-    static int counter;
+    std::vector<std::pair<std::string, Expr*>> pendingEqus;
 };
 
 #endif

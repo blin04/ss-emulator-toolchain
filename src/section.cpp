@@ -71,6 +71,10 @@ void Section::addForwardReference(std::string symbol, int location) {
     freftab[symbol].push_back(location);
 }
 
+void Section::addPendingEqu(const char* name, Expr* expr) {
+    pendingEqus.push_back({name, expr});
+}
+
 void Section::backpatch() {
     // for each entry in forward reference table:
     //      if entry.symbol is defined:
@@ -138,6 +142,23 @@ void Section::backpatch() {
 int Section::getSectionID() { return index; }
 
 std::string Section::getSectionName() { return name; }
+
+bool Section::resolvePendingEqus() {
+    SymbolTable* symtab = ObjectFile::getSymbolTable();
+    for (auto e : pendingEqus) {
+        Expr* expr = e.second;
+        int value = expr->constValue;
+        for (auto& term : expr->terms) {
+            if (!symtab->isDefined(term.second)) { 
+                std::cout << "error: undefined symbol " << term.second << "\n";
+                return false;
+            }
+            value += term.first * getSymbolValue(term.second.c_str());
+        }
+        defineSymbol(e.first.c_str(), value, true);
+    }
+    return true;
+}
 
 void Section::serialize(std::ofstream& out) {
     // serialize section

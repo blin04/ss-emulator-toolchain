@@ -64,6 +64,10 @@ void defineSymbol(const char* name, int value, bool equ_defined) {
     );
 }
 
+void defineEquSymbol(const char* name, Expr* expr) {
+    
+}
+
 void declareSymbolsGlobal(char** symbs) {
     SymbolTable* symtab = ObjectFile::getSymbolTable();
     for (int i = 0; symbs[i] != nullptr; i++) {
@@ -258,4 +262,32 @@ int memoryStatementHandler(int type, Operand op, int gpr) {
         free(op.symbol);
 
     return count;
+}
+
+Expr* exprLiteral(int v) {
+    Expr* e = new Expr();
+    e->constValue = v;
+    return e;
+}
+
+Expr* exprSymbol(const char* s) {
+    Expr* e = new Expr();
+    e->terms.push_back({ +1, s });
+    return e;
+}
+
+Expr* exprAdd(Expr* a, Expr* b) {
+    a->constValue += b->constValue;
+    for (auto& t : b->terms)
+        a->terms.push_back(t);
+    delete b;
+    return a;
+}
+
+Expr* exprSub(Expr* a, Expr* b) {
+    a->constValue -= b->constValue;
+    for (auto& t : b->terms)
+        a->terms.push_back({ -t.first, t.second });  // flip b's signs
+    delete b;
+    return a;
 }

@@ -55,6 +55,12 @@ void ObjectFile::generate() {
     // file name hardcoded for now
     std::ofstream out(outputPath, std::ios::out);
 
+    // resolve equs from sections
+    for (Section*& s : sections) {
+        if (!s->resolvePendingEqus())
+            return;
+    }
+
     symbolTable->serialize(out);
 
     // todo: from sections vector extract

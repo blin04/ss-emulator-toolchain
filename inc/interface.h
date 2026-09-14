@@ -7,17 +7,25 @@
 #ifndef _INTERFACE_H_
 #define _INTERFACE_H_
 
+#include <vector>
+#include <string>
+
 extern int location_counter;     // address (offset) inside a section
 
 // Types
 
-typedef struct operand {
+struct Operand {
     bool            fromMemory;
     int             gpr;
     unsigned int    disp;
     // bool    absolute;
     char*           symbol;
-} Operand;
+};
+
+struct Expr {
+    int constValue = 0;
+    std::vector<std::pair<int, std::string>> terms;
+};
 
 // Functions
 
@@ -26,6 +34,7 @@ void addSkipDirective(int bytes_count);
 int addWordDirective(char** initializers);
 
 void defineSymbol(const char* name, int value, bool equ_defined = false);
+void defineEquSymbol(const char* name, Expr* expr);
 void declareSymbolsGlobal(char** symbols);
 void declareSymbolsExtern(char** symbols);
 int getSymbolValue(const char* name);
@@ -43,5 +52,12 @@ int twoOpStatementHandler(int stmt, int gpr1, int gpr2);
 int threeOpStatementHandler(int stmt, int gpr1, int gpr2, Operand op);
 
 int memoryStatementHandler(int type, Operand op, int gpr);
+
+// expr builders
+
+Expr* exprLiteral(int v);
+Expr* exprSymbol(const char* s);
+Expr* exprAdd(Expr* a, Expr* b);
+Expr* exprSub(Expr* a, Expr* b);
 
 #endif
