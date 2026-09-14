@@ -1,11 +1,11 @@
+#include <iostream>
 #include <termios.h>
 #include <unistd.h>
 
 #include "../inc/terminal.hpp"
 #include "../inc/cpu.hpp"
 
-Terminal::Terminal() 
-    : term_out(0) {
+Terminal::Terminal() {
     tcgetattr(STDIN_FILENO, &oldConfig);
 
     termios newConfig = oldConfig;
@@ -23,15 +23,12 @@ Terminal::~Terminal() {
 
 int Terminal::readIn() { return term_in; }
 
-void Terminal::writeOut(int word) { term_out = word; }
+void Terminal::writeOut(int word) { 
+    char c = (char)word;
+    write(STDOUT_FILENO, &c, 1);
+}
 
 bool Terminal::poll() {
-
-    if (term_out != 0) {
-        write(STDOUT_FILENO, &term_out, 1);
-        term_out = 0;
-    }
-
     int ret = read(STDIN_FILENO, &term_in, 1);
     return ret != 0;
 }

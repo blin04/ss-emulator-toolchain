@@ -18,7 +18,6 @@ private:
     termios oldConfig;
 
     int term_in;
-    int term_out;
 };
 
 #endif
