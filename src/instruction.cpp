@@ -135,55 +135,55 @@ void Instruction::xchngHandler(int gprS, int gprD) {
 
 void Instruction::addHandler(int gprS, int gprD) {
     ObjectFile::getCurrentSection()->addLine(
-        new Instruction(0b0101, 0, gprD, gprS, gprD, 0)        
+        new Instruction(0b0101, 0, gprD, gprD, gprS, 0)        
     );
 }
 
 void Instruction::subHandler(int gprS, int gprD) {
     ObjectFile::getCurrentSection()->addLine(
-        new Instruction(0b0101, 1, gprD, gprS, gprD, 0)        
+        new Instruction(0b0101, 1, gprD, gprD, gprS, 0)        
     );
 }
 
 void Instruction::mulHandler(int gprS, int gprD) {
     ObjectFile::getCurrentSection()->addLine(
-        new Instruction(0b0101, 2, gprD, gprS, gprD, 0)        
+        new Instruction(0b0101, 2, gprD, gprD, gprS, 0)        
     );
 }
 
 void Instruction::divHandler(int gprS, int gprD) {
     ObjectFile::getCurrentSection()->addLine(
-        new Instruction(0b0101, 3, gprD, gprS, gprD, 0)        
+        new Instruction(0b0101, 3, gprD, gprD, gprS, 0)        
     );
 }
 
 void Instruction::andHandler(int gprS, int gprD) {
     ObjectFile::getCurrentSection()->addLine(
-        new Instruction(0b0110, 1, gprD, gprS, gprD, 0)        
+        new Instruction(0b0110, 1, gprD, gprD, gprS, 0)        
     );
 }
 
 void Instruction::orHandler(int gprS, int gprD) {
     ObjectFile::getCurrentSection()->addLine(
-        new Instruction(0b0110, 2, gprD, gprS, gprD, 0)        
+        new Instruction(0b0110, 2, gprD, gprD, gprS, 0)        
     );
 }
 
 void Instruction::xorHandler(int gprS, int gprD) {
     ObjectFile::getCurrentSection()->addLine(
-        new Instruction(0b0110, 3, gprD, gprS, gprD, 0)        
+        new Instruction(0b0110, 3, gprD, gprD, gprS, 0)        
     );
 }
 
 void Instruction::shlHandler(int gprS, int gprD) {
     ObjectFile::getCurrentSection()->addLine(
-        new Instruction(0b0111, 0, gprD, gprS, gprD, 0)        
+        new Instruction(0b0111, 0, gprD, gprD, gprS, 0)        
     );
 }
 
 void Instruction::shrHandler(int gprS, int gprD) {
     ObjectFile::getCurrentSection()->addLine(
-        new Instruction(0b0111, 1, gprD, gprS, gprD, 0)        
+        new Instruction(0b0111, 1, gprD, gprD, gprS, 0)        
     );
 }
 
