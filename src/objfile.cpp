@@ -50,27 +50,29 @@ void ObjectFile::newSection(std::string name, int offset) {
 }
 
 void ObjectFile::generate() {
-    if (currentSection != nullptr) 
-        sections.push_back(currentSection);
+    try {
+        if (currentSection != nullptr) 
+            sections.push_back(currentSection);
 
-    // file name hardcoded for now
-    std::ofstream out(outputPath, std::ios::out);
+        // resolve deferred .equ definitions now that the whole file is parsed
+        if (!resolvePendingEqus())
+            return;
 
-    // resolve deferred .equ definitions now that the whole file is parsed
-    if (!resolvePendingEqus())
-        return;
+        for (Section*& s : sections)
+            s->generateContent();
 
-    symbolTable->serialize(out);
+        std::ofstream out(outputPath, std::ios::out);
+        
+        symbolTable->serialize(out);
+        for (Section*& s : sections)
+            s->serialize(out);    
 
-    // todo: from sections vector extract
-    // data needed for Section Table and
-    // serialize it
-
-    for (Section*& s : sections) {
-        s->serialize(out);    
+        out.close();
     }
-
-    out.close();
+    catch (std::exception& e) {
+        std::cout << e.what() << "\n";
+        return;
+    }
 }
 
 void ObjectFile::setOutput(std::string path) {

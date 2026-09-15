@@ -122,9 +122,6 @@ void Section::backpatch() {
                 }
             }
             else {
-                if (!symtab->isDefined(symbol))
-                    symtab->declareSymbolExtern(symbol);
-
                 if (symtab->getSymbolBind(symbol) == SymbolTable::SYMB_GLOB) {
                     addRelocation(
                         offset,
@@ -135,6 +132,10 @@ void Section::backpatch() {
                 }
                 else {
                     int symb_sec_id = symtab->getSymbolSection(symbol);
+
+                    if (symb_sec_id == -1)
+                        throw std::runtime_error("error: undefined symbol " + symbol); 
+
                     std::string symb_sec_name = ObjectFile::getSectionFromID(symb_sec_id);
                     addRelocation(
                         offset,
@@ -144,6 +145,9 @@ void Section::backpatch() {
                         value 
                     );
                 }
+
+                if (!symtab->isDefined(symbol))
+                    symtab->declareSymbolExtern(symbol);
             }
         }
     }
@@ -153,7 +157,7 @@ int Section::getSectionID() { return index; }
 
 std::string Section::getSectionName() { return name; }
 
-void Section::serialize(std::ofstream& out) {
+void Section::generateContent() {
     // serialize section
 
     for (Line* l : lines) {
@@ -225,7 +229,9 @@ void Section::serialize(std::ofstream& out) {
     }
 
     backpatch();
+}
 
+void Section::serialize(std::ofstream& out) {
     // write section contents to output
     bool newline = false;
     out << "#" << name << "\n";

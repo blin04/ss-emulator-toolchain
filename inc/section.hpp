@@ -24,6 +24,7 @@ public:
     int addLiteralPoolValue(int value, const char* symbol);
     void addForwardReference(std::string symbol, int location);
     void backpatch();
+    void generateContent();
     int getSectionID();
     std::string getSectionName();
     void serialize(std::ofstream& file);
