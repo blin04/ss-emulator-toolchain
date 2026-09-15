@@ -75,6 +75,11 @@ void GlobalSymbolTable::resolveFinal() {
             undefinedSymbols.erase(symbol.name);
         }
 
+        if (symbol.section == SymbolTable::SYMB_ABS) {
+            finalSymbolValues[symbol.name] = symbol.value;
+            continue;
+        }
+
         int file_index = found.second.first;
         int symbol_index = found.second.second;
         LinkFile& file = linker->files[file_index];
@@ -112,9 +117,15 @@ void GlobalSymbolTable::assignMergedIndices() {
         LinkFile::LocalSymbol symbol = found.first;
         int file_index = found.second.first;
         LinkFile& file = linker->files[file_index];
-        std::string section_name = file.getSectionName(symbol.section);
-        int section_index = getSymbolIndex(section_name);
-        addEntry(symbol.name, section_index, symbol.value, symbol.bind);
+
+        if (symbol.section == SymbolTable::SYMB_ABS) {
+            addEntry(symbol.name, symbol.section, symbol.value, symbol.bind);
+        }
+        else {
+            std::string section_name = file.getSectionName(symbol.section);
+            int section_index = getSymbolIndex(section_name);
+            addEntry(symbol.name, section_index, symbol.value, symbol.bind);
+        }
     }
 }
 
@@ -153,8 +164,10 @@ void GlobalSymbolTable::serialize(std::ofstream& out) {
         out << std::left
             << std::setw(indexWidth) << s->index << " | "
             << std::setw(nameWidth)  << s->name << " | ";
-        if (s->section != 0)
+        if (s->section > 0)
             out << std::setw(sectionWidth) << s->section;
+        else if (s->section < 0)
+            out << std::setw(sectionWidth) << "ABS";
         else
             out << std::setw(sectionWidth) << "UND";
         out << " | "

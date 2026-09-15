@@ -86,7 +86,9 @@ std::vector<LinkFile::LocalSymbol> parseSymtab(LineCursor& cur) {
 
         symb.index   = std::stoi(fields[0]);
         symb.name    = fields[1];
-        symb.section = (fields[2] == "UND") ? 0 : std::stoi(fields[2]);
+        if (fields[2] == "UND") symb.section = SymbolTable::SYMB_UND;
+        else if (fields[2] == "ABS") symb.section = SymbolTable::SYMB_ABS;
+        else symb.section = std::stoi(fields[2]);
         symb.value   = std::stoi(fields[3]);
         symb.bind    = (fields[4] == "GLOB") ? SymbolTable::SYMB_GLOB : SymbolTable::SYMB_LOC;
         symb.defined = (fields[5] == "yes");
