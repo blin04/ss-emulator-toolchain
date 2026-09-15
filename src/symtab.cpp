@@ -55,6 +55,7 @@ bool SymbolTable::isDefined(std::string symbol) {
 bool SymbolTable::isAbsolute(std::string symbol) {
     if (symbols.count(symbol))
         return symbols[symbol]->equ;
+        // return symbols[symbol]->section == SYMB_ABS;
     return false;
 }
 
@@ -156,17 +157,18 @@ void SymbolTable::serialize(std::ostream& out) {
 
     for (const auto* symb : orderedSymbols) {
         std::string bind = "LOC";
-        // if (symb->bind == SYMB_ABS) bind = "ABS";
         if (symb->bind == SYMB_GLOB) bind = "GLOB";
 
         out << std::left
             << std::setw(indexWidth) << symb->index << " | "
             << std::setw(nameWidth) << symb->name << " | ";
 
-        if (symb->section != SYMB_UND)
-            out << std::setw(sectionWidth) << symb->section;
-        else
+        if (symb->section == SYMB_UND)
             out << std::setw(sectionWidth) << "UND";
+        else if (symb->section == SYMB_ABS)
+            out << std::setw(sectionWidth) << "ABS";
+        else
+            out << std::setw(sectionWidth) << symb->section;
         out << " | ";
 
         out << std::setw(valueWidth) << symb->value << " | "

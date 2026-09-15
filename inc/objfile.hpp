@@ -3,11 +3,13 @@
 
 
 #include <string>
+#include <utility>
 #include <vector>
 
 class ForwardReferenceTable;
 class Section;
 class SymbolTable;
+struct Expr;
 
 class ObjectFile {
 public:
@@ -16,6 +18,9 @@ public:
     void generate();
     void newSection(std::string name, int offset);
     void setOutput(std::string path);
+
+    void addPendingEqu(const char* name, Expr* expr);
+    bool resolvePendingEqus();
 
     static Section* getCurrentSection();
     static SymbolTable* getSymbolTable();
@@ -28,6 +33,7 @@ private:
     std::vector<Section*>       sections;
     SymbolTable*                symbolTable;
     std::string                 outputPath;
+    std::vector<std::pair<std::string, Expr*>> pendingEqus;
 };
 
 #endif

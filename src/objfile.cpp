@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include "../inc/interface.h"
 #include "../inc/objfile.hpp"
 #include "../inc/section.hpp"
 #include "../inc/symtab.hpp"
@@ -55,11 +56,9 @@ void ObjectFile::generate() {
     // file name hardcoded for now
     std::ofstream out(outputPath, std::ios::out);
 
-    // resolve equs from sections
-    for (Section*& s : sections) {
-        if (!s->resolvePendingEqus())
-            return;
-    }
+    // resolve deferred .equ definitions now that the whole file is parsed
+    if (!resolvePendingEqus())
+        return;
 
     symbolTable->serialize(out);
 
@@ -76,4 +75,42 @@ void ObjectFile::generate() {
 
 void ObjectFile::setOutput(std::string path) {
     outputPath = path;
+}
+
+void ObjectFile::addPendingEqu(const char* name, Expr* expr) {
+    pendingEqus.push_back({ name, expr });
+}
+
+bool ObjectFile::resolvePendingEqus() {
+    bool progress = true;
+    while (progress && !pendingEqus.empty()) {
+        progress = false;
+        for (auto it = pendingEqus.begin(); it != pendingEqus.end(); ) {
+            int value;
+            EquKind equ_kind = classifyEqu(it->second, value);
+
+            if (equ_kind == EQU_DEFER) {
+                // dependency can't be resolved yet, defer
+                ++it;
+                continue;
+            }
+
+            if (equ_kind == EQU_ERROR) {
+                std::cout << "error: invalid .equ expression for symbol " << it->first << "\n";
+                return false;
+            }
+
+            defineSymbol(it->first.c_str(), value, true);
+            delete it->second;
+            it = pendingEqus.erase(it);
+            progress = true;
+        }
+    }
+
+    if (!pendingEqus.empty()) {
+        for (auto& e : pendingEqus)
+            std::cout << "error: undefined symbols referenced in definition of " << e.first << "\n";
+        return false;
+    }
+    return true;
 }

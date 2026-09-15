@@ -8,8 +8,11 @@
 
 class SymbolTable {
 public:
+    static const int SYMB_ABS = -1;
+    static const int SYMB_UND = 0;
+
     enum SymbolBind {
-        SYMB_GLOB,
+        SYMB_GLOB = 1,
         SYMB_LOC,
     };
 
@@ -27,7 +30,6 @@ public:
     bool isExtern(std::string symbol);
     void serialize(std::ostream& out);
 private:
-    const int SYMB_UND = 0;
 
     typedef struct {
         int         index;

@@ -24,7 +24,7 @@ struct Operand {
 
 struct Expr {
     int constValue = 0;
-    std::vector<std::pair<int, std::string>> terms;
+    std::vector<std::pair<int, std::string>> terms;         // pairs of (sign, symbol)
 };
 
 // Functions
@@ -33,7 +33,7 @@ void addAsciiDirective(const char* str);
 void addSkipDirective(int bytes_count);
 int addWordDirective(char** initializers);
 
-void defineSymbol(const char* name, int value, bool equ_defined = false);
+void defineSymbol(const char* name, int value, bool abs = false, int sectionID = -1);
 void defineEquSymbol(const char* name, Expr* expr);
 void declareSymbolsGlobal(char** symbols);
 void declareSymbolsExtern(char** symbols);
@@ -55,9 +55,14 @@ int memoryStatementHandler(int type, Operand op, int gpr);
 
 // expr builders
 
+enum EquKind { EQU_ABSOLUTE, EQU_DEFER, EQU_ERROR };
+
 Expr* exprLiteral(int v);
 Expr* exprSymbol(const char* s);
 Expr* exprAdd(Expr* a, Expr* b);
 Expr* exprSub(Expr* a, Expr* b);
+
+bool exprEval(Expr* e, int& result);
+EquKind classifyEqu(Expr* e, int& value);
 
 #endif

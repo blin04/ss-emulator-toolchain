@@ -23,11 +23,9 @@ public:
     // returns index of the added value in the pool
     int addLiteralPoolValue(int value, const char* symbol);
     void addForwardReference(std::string symbol, int location);
-    void addPendingEqu(const char* name, Expr* expr);
     void backpatch();
     int getSectionID();
     std::string getSectionName();
-    bool resolvePendingEqus();
     void serialize(std::ofstream& file);
 private:
 
@@ -68,8 +66,6 @@ private:
     int offset;
     std::vector<RelocEntry*> relocations;
     int startAddress;
-
-    std::vector<std::pair<std::string, Expr*>> pendingEqus;
 };
 
 #endif

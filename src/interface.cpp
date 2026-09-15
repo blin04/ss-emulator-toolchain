@@ -54,18 +54,36 @@ bool handleOperand(Operand &op) {
 }
 
 // defines symbol with a particular value
-void defineSymbol(const char* name, int value, bool equ_defined) {
+void defineSymbol(const char* name, int value, bool abs, int sectionID) {
+    int section;
+    if (abs)
+        section = SymbolTable::SYMB_ABS;
+    else if (sectionID != -1)
+        section = sectionID;
+    else
+        section = ObjectFile::getCurrentSection()->getSectionID();
+
     ObjectFile::getSymbolTable()->defineSymbol(
-        name, 
-        ObjectFile::getCurrentSection()->getSectionID(), 
-        value, 
+        name,
+        section,
+        value,
         SymbolTable::SYMB_LOC,
-        equ_defined
+        abs
     );
 }
 
 void defineEquSymbol(const char* name, Expr* expr) {
-    
+    int value;
+    EquKind equ_kind = classifyEqu(expr, value);
+    if (equ_kind != EQU_DEFER && equ_kind != EQU_ERROR) {
+        defineSymbol(name, value, (equ_kind == EQU_ABSOLUTE));
+    }
+    else {
+        // some symbols undefined, defer resolvement
+        // error cases are also deffered because handling
+        // is performed later
+        ObjectFile::getInstance()->addPendingEqu(name, expr);
+    }
 }
 
 void declareSymbolsGlobal(char** symbs) {
@@ -272,7 +290,7 @@ Expr* exprLiteral(int v) {
 
 Expr* exprSymbol(const char* s) {
     Expr* e = new Expr();
-    e->terms.push_back({ +1, s });
+    e->terms.push_back({ 1, s });
     return e;
 }
 
@@ -290,4 +308,38 @@ Expr* exprSub(Expr* a, Expr* b) {
         a->terms.push_back({ -t.first, t.second });  // flip b's signs
     delete b;
     return a;
+}
+
+bool exprEval(Expr* e, int& result) {
+    const int SYMB_ABS = -1;
+    SymbolTable* symtab = ObjectFile::getSymbolTable();
+    int value = e->constValue;
+    for (auto& term : e->terms) {
+        if (!symtab->isDefined(term.second)) { 
+            return false;
+        }
+        value += term.first * getSymbolValue(term.second.c_str());
+    }
+    result = value;
+    return true;
+}
+
+EquKind classifyEqu(Expr* e, int& value) {
+    SymbolTable* symtab = ObjectFile::getSymbolTable();
+    value = e->constValue;
+    std::map<int, int> refs;          
+    for (auto& term : e->terms) {
+        if (!symtab->isDefined(term.second))
+            return EQU_DEFER;
+
+        value += term.first * getSymbolValue(term.second.c_str());
+
+        if (!symtab->isAbsolute(term.second))
+            refs[symtab->getSymbolSection(term.second)] += term.first;
+    }
+
+    int valid = true;
+    for (auto& ref : refs)
+        valid &= (ref.second == 0);
+    return (valid ? EQU_ABSOLUTE : EQU_ERROR); 
 }
