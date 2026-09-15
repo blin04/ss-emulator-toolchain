@@ -50,6 +50,7 @@ private:
 
     // section contents in bytes
     std::vector<uint8_t> section_bytes;
+    std::vector<uint8_t> litpool_bytes;
 
     // list of **indexes** of instructions that access 
     // symbols in literal pool with pc relative addressing 

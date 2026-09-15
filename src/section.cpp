@@ -88,8 +88,12 @@ void Section::backpatch() {
             int offset = e.second[i];
             // symbols from literal pool have
             // to have their location values corrected
+            // because the value in freftab represents
+            // offset from the start of the pool
+            bool from_pool = false;
             if (literalPoolIndex.count(e.first) != 0) {
                 offset += section_bytes.size();
+                from_pool = true;
             }
 
             if (symtab->isAbsolute(symbol)) {
@@ -102,10 +106,20 @@ void Section::backpatch() {
                 int b3 = (value >> 16) & 0xff;
                 int b4 = (value >> 24) & 0xff;
 
-                section_bytes[e.second[i]] = b1;
-                section_bytes[e.second[i] + 1] = b2;
-                section_bytes[e.second[i] + 2] = b3;
-                section_bytes[e.second[i] + 3] = b4;
+                if (!from_pool) {
+                    // patching location from section
+                    section_bytes[e.second[i]] = b1;
+                    section_bytes[e.second[i] + 1] = b2;
+                    section_bytes[e.second[i] + 2] = b3;
+                    section_bytes[e.second[i] + 3] = b4;
+                }
+                else {
+                    // patching up literal pool
+                    litpool_bytes[e.second[i]] = b1;
+                    litpool_bytes[e.second[i] + 1] = b2;
+                    litpool_bytes[e.second[i] + 2] = b3;
+                    litpool_bytes[e.second[i] + 3] = b4;
+                }
             }
             else {
                 if (!symtab->isDefined(symbol))
@@ -185,7 +199,7 @@ void Section::serialize(std::ofstream& out) {
 
     int mask = 0xffff;
     int value;
-    std::vector<uint8_t> litpool_bytes;
+    // std::vector<uint8_t> litpool_bytes;
     SymbolTable* symtab = ObjectFile::getSymbolTable();
     for (int i = 0; i < literalPool.size(); i++) {
         LitPoolEntry* l = literalPool[i];
@@ -199,6 +213,8 @@ void Section::serialize(std::ofstream& out) {
             );
             value = 0;
         }
+        //else if (!l->symbol.empty())
+        //    value = symtab->getSymbolValue(l->symbol);
         else value = l->value;
 
         // serialize
